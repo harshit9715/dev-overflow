@@ -6,7 +6,7 @@ import { Webhook } from "svix";
 
 export async function POST(req: Request) {
   // Todo: Add your webhook secret to .env or .env.local
-  const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+  const WEBHOOK_SECRET = process.env.NEXT_CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
     throw new Error(
