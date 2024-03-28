@@ -29,7 +29,8 @@ export async function createUser(params: CreateUserParams) {
     return user as IUser;
   } catch (error) {
     console.log(error);
-    throw new Error("Error creating user");
+    return null;
+    // throw new Error("Error creating user");
   }
 }
 
@@ -44,7 +45,8 @@ export async function updateUser(params: UpdateUserParams) {
     return user as IUser;
   } catch (error) {
     console.log(error);
-    throw new Error("Error updating user");
+    return null;
+    // throw new Error("Error updating user");
   }
 }
 
