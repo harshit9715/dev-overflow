@@ -48,7 +48,7 @@ const LeftSidebar = () => {
                   src={"/assets/icons/account.svg"}
                   width={20}
                   height={20}
-                  alt="Logout"
+                  alt="Log In"
                   className="max-lg:invert-colors lg:hidden"
                 />
                 <p className={"primary-text-gradient max-lg:hidden"}>Log In</p>
@@ -60,7 +60,7 @@ const LeftSidebar = () => {
                   src={"/assets/icons/sign-up.svg"}
                   width={20}
                   height={20}
-                  alt="Logout"
+                  alt="Sign up"
                   className="max-lg:invert-colors lg:hidden"
                 />
                 <p className={"max-lg:hidden"}>Sign up</p>
@@ -69,17 +69,17 @@ const LeftSidebar = () => {
           </div>
         </SignedOut>
         <SignedIn>
-          <div className="flex w-full items-center justify-start gap-4 bg-transparent p-4">
+          <div className="flex w-full items-center justify-start gap-4 bg-transparent">
             <SignOutButton>
-              <Button className="small-medium light-border-2 btn-tertiary text-dark400_light900 min-h-[41px] w-full rounded-lg px-4 py-3 shadow-none">
+              <Button className="small-medium light-border-2 btn-tertiary text-dark400_light900 min-h-[41px] w-full rounded-lg border p-3 shadow-none">
                 <Image
                   src={"/assets/icons/logout.svg"}
                   width={20}
                   height={20}
                   alt="Logout"
-                  className="dark:invert"
+                  className="lg:hidden"
                 />
-                <p className={"base-medium max-lg:hidden"}>Logout</p>
+                <p className={"max-lg:hidden"}>Logout</p>
               </Button>
             </SignOutButton>
           </div>

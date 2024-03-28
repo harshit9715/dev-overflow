@@ -1,16 +1,19 @@
 import { bigNumberToString, getTimestamp } from "@/lib/utils";
-import { CardProps } from "@/types";
+// import { CardProps } from "@/types";
 import Link from "next/link";
 import Metric from "../shared/Metric";
 import RenderTag from "../shared/RenderTag";
 
 const QuestionCard = ({
   createdAt,
-  metadata,
-  publisher,
+  views,
+  answers,
+  upvotes,
+  downvotes,
+  author,
   tags,
   title,
-}: CardProps) => {
+}: any) => {
   return (
     <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
       <div className="flex-col-reverse items-start justify-between gap-5 sm:flex-row">
@@ -27,39 +30,39 @@ const QuestionCard = ({
         {/* if signed in, add edit delete actions */}
       </div>
       <div className="mt-3.5 flex flex-wrap gap-2">
-        {tags.map((tag) => (
+        {tags.map((tag: any) => (
           <RenderTag key={tag._id} _id={tag._id} name={tag.name} />
         ))}
       </div>
 
       <div className="flex-between mt-6 w-full flex-wrap gap-3">
         <Metric
-          imgUrl={publisher.imgURL}
+          imgUrl={author.picture}
           alt="user"
-          value={publisher.name}
+          value={author.name}
           title={`- asked ${getTimestamp(createdAt)}`}
-          href={`/profile/${publisher.name}`}
+          href={`/profile/${author.name}`}
           isAuthor
           textStyles="body-medium text-dark400_light800"
         />
         <Metric
           imgUrl="/assets/icons/like.svg"
           alt="Upvotes"
-          value={bigNumberToString(metadata.votes)}
+          value={bigNumberToString(upvotes.length)}
           title=" Votes"
           textStyles="small-medium text-dark400_light800"
         />
         <Metric
           imgUrl="/assets/icons/message.svg"
           alt="Upvotes"
-          value={bigNumberToString(metadata.answers)}
+          value={bigNumberToString(answers.length)}
           title=" Answers"
           textStyles="small-medium text-dark400_light800"
         />
         <Metric
           imgUrl="/assets/icons/eye.svg"
           alt="eye"
-          value={bigNumberToString(metadata.views)}
+          value={bigNumberToString(views)}
           title=" Views"
           textStyles="small-medium text-dark400_light800"
         />

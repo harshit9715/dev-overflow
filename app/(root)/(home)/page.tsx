@@ -4,11 +4,13 @@ import Filter from "@/components/shared/Filter";
 import NoResult from "@/components/shared/NoResult";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
-import { CardData } from "@/constants";
 import { HomePageFilters } from "@/constants/filters";
+import { getQuestions } from "@/lib/actions/question.action";
 import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
+  const { questions } = await getQuestions({});
+  console.log(questions);
   return (
     <>
       <div className="flex w-full flex-col-reverse justify-between gap-4 sm:flex-row sm:items-center">
@@ -35,15 +37,18 @@ export default function Home() {
       </div>
       <HomeFilters />
       <div className="mt-10 flex w-full flex-col gap-6">
-        {CardData.length > 0 ? (
-          CardData.map((card) => (
+        {questions.length > 0 ? (
+          questions.map((question) => (
             <QuestionCard
-              key={card.title}
-              createdAt={card.createdAt}
-              metadata={card.metadata}
-              publisher={card.publisher}
-              tags={card.tags}
-              title={card.title}
+              key={question.title}
+              createdAt={question.createdAt}
+              views={question.views}
+              upvotes={question.upvotes}
+              downvotes={question.downvotes}
+              answers={question.answers}
+              author={question.author}
+              tags={question.tags}
+              title={question.title}
             />
           ))
         ) : (
