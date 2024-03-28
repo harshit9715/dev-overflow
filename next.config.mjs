@@ -3,6 +3,8 @@ const nextConfig = {
     images: {
         remotePatterns: [{
             hostname: "devflow-rose.vercel.app",
+        }, {
+            hostname: "https://img.clerk.com/",
         }]
     }
 };
