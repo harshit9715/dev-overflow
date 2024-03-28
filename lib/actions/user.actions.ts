@@ -69,10 +69,7 @@ export async function deleteUser(params: DeleteUserParams) {
     await Question.deleteMany({ author: user._id });
 
     // Todo: delete user answers, comments, etc
-    console.log(
-      "User question ids to be used for deleting answers",
-      userQuestionIds
-    );
+    console.log("User question ids", userQuestionIds);
 
     // delete user
     const deletedUser = await User.findOneAndDelete(user._id);
