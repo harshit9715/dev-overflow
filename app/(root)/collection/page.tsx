@@ -1,25 +1,17 @@
 import QuestionCard from "@/components/cards/QuestionCard";
-import HomeFilters from "@/components/home/HomeFilters";
 import Filter from "@/components/shared/Filter";
 import NoResult from "@/components/shared/NoResult";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { Button } from "@/components/ui/button";
-import { HomePageFilters } from "@/constants/filters";
-import { getQuestions } from "@/lib/actions/question.action";
-import Link from "next/link";
+import { QuestionFilters } from "@/constants/filters";
+import { getAllSavedQuestions } from "@/lib/actions/user.actions";
+import { auth } from "@clerk/nextjs";
 
-const Home = async () => {
-  const { questions } = await getQuestions({});
+const Collections = async () => {
+  const { userId } = auth();
+  const { savedQuestions } = await getAllSavedQuestions({ clerkId: userId! });
   return (
     <>
-      <div className="flex w-full flex-col-reverse justify-between gap-4 sm:flex-row sm:items-center">
-        <h1 className="h1-bold text-dark100_light900">All Questions</h1>
-        <Link href="/ask-question" className="flex justify-end max-sm:w-full">
-          <Button className="primary-gradient min-h-[46px] px-4 py-3 !text-light-900">
-            Ask a Question
-          </Button>
-        </Link>
-      </div>
+      <h1 className="h1-bold text-dark100_light900">Saved Questions</h1>
       <div className="mt-11 flex justify-between gap-5 max-sm:flex-col sm:items-center">
         <LocalSearchbar
           route="/"
@@ -29,15 +21,13 @@ const Home = async () => {
           otherClasses="flex-1"
         />
         <Filter
-          filters={HomePageFilters}
+          filters={QuestionFilters}
           otherClasses="min-h-[56px] sm:min-w-[170px]"
-          containerClasses="hidden max-md:flex"
         />
       </div>
-      <HomeFilters />
       <div className="mt-10 flex w-full flex-col gap-6">
-        {questions.length > 0 ? (
-          questions.map((question) => (
+        {savedQuestions.length > 0 ? (
+          savedQuestions.map((question: any) => (
             <QuestionCard
               key={question.title}
               createdAt={question.createdAt}
@@ -53,7 +43,7 @@ const Home = async () => {
           ))
         ) : (
           <NoResult
-            title="There's no question to show"
+            title="There's no saved question to show"
             description="Be the first to break silence 🚀 Ask a Question and kickstart the
                   discussion. out query could be the next big thing others learn from. Get
                   Involved! 💡"
@@ -66,4 +56,4 @@ const Home = async () => {
   );
 };
 
-export default Home;
+export default Collections;

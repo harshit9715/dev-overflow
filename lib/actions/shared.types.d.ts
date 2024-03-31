@@ -41,8 +41,9 @@ export interface RecommendedParams {
   searchQuery?: string;
 }
 
-export interface ViewQuestionParams {
-  questionId: string;
+export interface ViewItemParams {
+  itemId: string;
+  type: "question" | "answer";
   userId: string | undefined;
 }
 

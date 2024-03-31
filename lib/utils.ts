@@ -34,3 +34,11 @@ export const bigNumberToString = (num: number): string => {
     return num.toString();
   }
 };
+
+export const formattedDate = (date: Date): string => {
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
