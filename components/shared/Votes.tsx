@@ -60,7 +60,6 @@ const Votes = ({
         hasupVoted: voteType === "upvote",
         path: pathname,
       });
-      return;
       // todo: show a toast
     }
   };

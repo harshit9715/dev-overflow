@@ -8,7 +8,7 @@ interface Props extends SearchParamsProps {
 }
 
 const AnswerTab = async ({ userId, clerkId }: Props) => {
-  const { answers, totalAnsweredQuestions } = await getAllAnsweredQuestions({
+  const { answers } = await getAllAnsweredQuestions({
     userId,
   });
   return (

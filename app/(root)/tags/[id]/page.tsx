@@ -2,7 +2,6 @@ import QuestionCard from "@/components/cards/QuestionCard";
 import NoResult from "@/components/shared/NoResult";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { getQuestionsByTagId } from "@/lib/actions/question.action";
-import { IQuestion } from "@/lib/database/question.model";
 import { URLProps } from "@/types";
 
 const TagDetails = async ({ params }: URLProps) => {
@@ -21,7 +20,7 @@ const TagDetails = async ({ params }: URLProps) => {
       </div>
       <div className="mt-10 flex w-full flex-col gap-6">
         {tag.questions.length > 0 ? (
-          tag.questions.map((question: IQuestion) => (
+          tag.questions.map((question: any) => (
             <QuestionCard
               key={question.title}
               createdAt={question.createdAt}

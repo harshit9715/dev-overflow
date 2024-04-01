@@ -107,13 +107,12 @@ const Profile = async ({ params: { id } }: URLProps) => {
             />
           </TabsContent>
         </Tabs>
-        <div className="hidden flex flex-1 flex-col max-lg:hidden">
+        <div className="hidden flex-1 flex-col max-lg:hidden">
           <h3 className="h3-semibold text-dark100_light900 mb-4">Top Tags</h3>
           {tags.length &&
             tags.map((tag) => (
-              <div className="py-2">
+              <div key={tag._id} className="py-2">
                 <RenderTag
-                  key={tag._id}
                   _id={tag._id}
                   name={tag.name}
                   showCount

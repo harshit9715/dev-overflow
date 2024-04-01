@@ -9,6 +9,7 @@ const EditProfile = async ({ params }: ParamsProps) => {
   if (!userId) return null;
   const mongoUser = await getUserById({ userId });
   const { question } = await getQuestionById(params.id);
+  console.log(question);
   return (
     <>
       <h1 className="h1-bold text-dark100_light900">Edit Question</h1>

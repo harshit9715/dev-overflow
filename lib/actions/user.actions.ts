@@ -127,7 +127,7 @@ export const saveQuestion = async (params: ToggleSaveQuestionParams) => {
 export const getAllSavedQuestions = async (params: GetSavedQuestionsParams) => {
   try {
     connectDatabase();
-    const { clerkId, filter, page = 1, pageSize = 30, searchQuery } = params;
+    const { clerkId, page = 1, pageSize = 30, searchQuery } = params;
     const questionFilter: FilterQuery<IQuestion> = { author: clerkId };
     const user = await User.findOne(questionFilter).populate({
       path: "saved",
