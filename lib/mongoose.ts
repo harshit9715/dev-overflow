@@ -10,7 +10,7 @@ export const connectDatabase = async () => {
   }
 
   if (isConnected) {
-    return console.log("=> using existing database connection");
+    return;
   }
 
   try {
@@ -18,7 +18,6 @@ export const connectDatabase = async () => {
       dbName: "DevOverflow",
     });
     isConnected = true;
-    console.log("=> using new database connection");
   } catch (error) {
     console.error("Error connecting to database: ", error);
   }
