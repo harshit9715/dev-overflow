@@ -93,9 +93,39 @@ export async function deleteUser(params: DeleteUserParams) {
 export async function getAllUsers(params: GetAllUsersParams) {
   try {
     connectDatabase();
-    // const {page=1, pageSize=20, filter, searchQuery} = params;
-    const users = await User.find({}).sort({ createdAt: -1 });
-    return { users };
+    const { searchQuery, filter, page = 1, pageSize = 20 } = params;
+    const query: FilterQuery<typeof User> = {};
+
+    if (searchQuery) {
+      query.$or = [
+        { name: { $regex: new RegExp(searchQuery, "i") } },
+        { username: { $regex: new RegExp(searchQuery, "i") } },
+      ];
+    }
+
+    let sortOptions = {};
+
+    switch (filter) {
+      case "new_users":
+        sortOptions = { joinedAt: -1 };
+        break;
+      case "old_users":
+        sortOptions = { joinedAt: 1 };
+        break;
+      case "top_contributors":
+        sortOptions = { reputation: -1 };
+        break;
+      default:
+        break;
+    }
+    const skip = (page - 1) * pageSize;
+    const users = await User.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(pageSize);
+    const totalUsers = await User.countDocuments(query);
+    const isNext = totalUsers > skip + users.length;
+    return { users, isNext };
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching users");
@@ -127,7 +157,32 @@ export const saveQuestion = async (params: ToggleSaveQuestionParams) => {
 export const getAllSavedQuestions = async (params: GetSavedQuestionsParams) => {
   try {
     connectDatabase();
-    const { clerkId, page = 1, pageSize = 30, searchQuery } = params;
+    const { clerkId, page = 1, pageSize = 15, searchQuery, filter } = params;
+
+    let sortOptions = {};
+
+    switch (filter) {
+      case "most_recent":
+        sortOptions = { createdAt: -1 };
+        break;
+      case "oldest":
+        sortOptions = { createdAt: 1 };
+        break;
+      case "most_voted":
+        sortOptions = { upvotes: -1 };
+        break;
+      case "most_viewed":
+        sortOptions = { views: -1 };
+        break;
+      case "most_answered":
+        sortOptions = { answers: -1 };
+        break;
+      default:
+        break;
+    }
+
+    const skip = (page - 1) * pageSize;
+
     const questionFilter: FilterQuery<IQuestion> = { author: clerkId };
     const user = await User.findOne(questionFilter).populate({
       path: "saved",
@@ -137,30 +192,21 @@ export const getAllSavedQuestions = async (params: GetSavedQuestionsParams) => {
           { title: { $regex: new RegExp(searchQuery, "i") } }
         : {},
       options: {
-        sort: { createdAt: -1 },
-        limit: pageSize,
-        skip: pageSize * (page - 1),
+        sort: sortOptions,
+        limit: pageSize + 1,
+        skip,
       },
       populate: [
         { path: "author", Model: User, select: "_id clerkId name picture" },
         { path: "tags", Model: Tag, select: "_id name" },
       ],
     });
-
     if (!user) {
       throw new Error("User not found");
     }
+    const isNext = user.saved.length > pageSize;
 
-    // const savedQuestions = await Question.find({
-    //   _id: { $in: user.saved },
-    // })
-    //   .populate("author")
-    //   .populate("tags")
-    //   .sort({ createdAt: -1 })
-    //   .limit(pageSize)
-    //   .skip(pageSize * (page - 1));
-
-    return { savedQuestions: user.saved };
+    return { savedQuestions: user.saved.slice(0, pageSize), isNext };
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching saved questions");
@@ -172,6 +218,7 @@ export const getUserQuestions = async (params: GetUserStatsParams) => {
     connectDatabase();
     const { userId, page = 1, pageSize = 10 } = params;
 
+    const skip = (page - 1) * pageSize;
     const totalQuestions = await Question.countDocuments({ author: userId });
 
     const userQuestions = await Question.find({ author: userId })
@@ -181,10 +228,11 @@ export const getUserQuestions = async (params: GetUserStatsParams) => {
       })
       .populate("tags", "_id name")
       .populate("author", "_id clerkId name picture")
-      .limit(pageSize)
-      .skip(pageSize * (page - 1));
+      .skip(skip)
+      .limit(pageSize);
 
-    return { questions: userQuestions, totalQuestions };
+    const isNext = totalQuestions > skip + userQuestions.length;
+    return { questions: userQuestions, totalQuestions, isNext };
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching user questions");
@@ -201,12 +249,16 @@ export const getAllAnsweredQuestions = async ({
     const totalAnsweredQuestions = await Answer.countDocuments({
       author: userId,
     });
+    const skip = (page - 1) * pageSize;
     const userAnswers = await Answer.find({ author: userId })
+      .skip(skip)
+      .limit(pageSize)
       .sort({ upvotes: -1 })
       .populate("question", "_id title")
       .populate("author", "_id clerkId name picture");
 
-    return { answers: userAnswers, totalAnsweredQuestions };
+    const isNext = totalAnsweredQuestions > skip + userAnswers.length;
+    return { answers: userAnswers, totalAnsweredQuestions, isNext };
   } catch (error) {
     console.error(error);
     throw new Error("Failed to fetch answers");

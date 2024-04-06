@@ -4,6 +4,7 @@ import { getTimestamp } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import Filter from "./Filter";
+import Pagination from "./Pagination";
 import ParseHTML from "./ParseHTML";
 import Votes from "./Votes";
 
@@ -11,7 +12,7 @@ interface AllAnswerProps {
   questionId: string;
   userId: string;
   totalAnswers: number;
-  page?: number;
+  page?: string;
   filter?: string;
 }
 
@@ -19,8 +20,15 @@ const AllAnswers = async ({
   questionId,
   totalAnswers,
   userId,
+  filter,
+  page,
 }: AllAnswerProps) => {
-  const answer = await getAnswers(JSON.parse(questionId));
+  const { answers, isNext } = await getAnswers({
+    questionId: JSON.parse(questionId),
+    page: page ? +page : 1,
+    sortBy: filter,
+    pageSize: 1,
+  });
   return (
     <div className="mt-11 ">
       <div className="flex items-center justify-between">
@@ -28,7 +36,7 @@ const AllAnswers = async ({
         <Filter filters={AnswerFilters} />
       </div>
       <div>
-        {answer.answers.map((answer) => (
+        {answers.map((answer) => (
           <article key={answer._id} className="light-border border-b py-10">
             <div className="flex items-center justify-between">
               {/* SPAN ID */}
@@ -69,6 +77,13 @@ const AllAnswers = async ({
             <ParseHTML data={answer.content} />
           </article>
         ))}
+      </div>
+      <div className="mt-6">
+        <Pagination
+          pageNumber={page ? +page : 1}
+          isNext={isNext}
+          scrollToTop={false}
+        />
       </div>
     </div>
   );

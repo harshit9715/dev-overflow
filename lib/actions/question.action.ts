@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import Answer from "../database/answer.model";
 import Interaction from "../database/interaction.model";
 import Question from "../database/question.model";
-import Tag, { ITag } from "../database/tag.model";
+import Tag from "../database/tag.model";
 import User from "../database/user.model";
 import { connectDatabase } from "../mongoose";
 import {
@@ -64,11 +64,45 @@ export async function createQuestion(params: CreateQuestionParams) {
 export async function getQuestions(params: GetQuestionsParams) {
   try {
     connectDatabase();
-    const questions = await Question.find({})
+    const { searchQuery, filter, page = 1, pageSize = 1 } = params;
+
+    const skip = (page - 1) * pageSize;
+
+    const query: FilterQuery<typeof Question> = {};
+    if (searchQuery) {
+      query.$or = [
+        { title: { $regex: new RegExp(searchQuery, "i") } },
+        { content: { $regex: new RegExp(searchQuery, "i") } },
+      ];
+    }
+    let sortOptions = {};
+
+    switch (filter) {
+      case "newest":
+        sortOptions = { createdAt: -1 };
+        break;
+      case "frequent":
+        sortOptions = { views: -1 };
+        break;
+      case "unanswered":
+        query.answers = { $size: 0 };
+        break;
+      // case "recommended":
+      //     query.answers = { $size: 0 };
+      //     break;
+      default:
+        break;
+    }
+    const questions = await Question.find(query)
       .populate({ path: "tags", model: Tag })
       .populate({ path: "author", model: User })
-      .sort({ createdAt: -1 });
-    return { questions };
+      .skip(skip)
+      .limit(pageSize)
+      .sort(sortOptions);
+
+    const totalQuestions = await Question.countDocuments(query);
+    const isNext = totalQuestions > skip + questions.length;
+    return { questions, isNext };
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching questions");
@@ -145,21 +179,8 @@ export async function getQuestionsByTagId({
   try {
     connectDatabase();
 
-    const tagFilter: FilterQuery<ITag> = { _id: tagId };
-
-    // const tag = await Tag.findById(tagId);
-    // if (!tag) {
-    //   console.log("Tag not found");
-    //   return { questions: [] };
-    // }
-    // const questions = await Question.find({ tags: tagId })
-    //   .populate({ path: "tags", model: Tag })
-    //   .populate({ path: "author", model: User })
-    //   .sort({ createdAt: -1 })
-    //   .skip((page - 1) * pageSize)
-    //   .limit(pageSize);
-    // return { questions };
-
+    const tagFilter: FilterQuery<typeof Tag> = { _id: tagId };
+    const skip = (page - 1) * pageSize;
     const tag = await Tag.findOne(tagFilter).populate({
       path: "questions",
       model: Question,
@@ -168,8 +189,8 @@ export async function getQuestionsByTagId({
         : {},
       options: {
         sort: { createdAt: -1 },
-        limit: pageSize,
-        skip: pageSize * (page - 1),
+        skip,
+        limit: pageSize + 1,
       },
       populate: [
         { path: "author", model: User, select: "_id clerkId name picture" },
@@ -177,10 +198,13 @@ export async function getQuestionsByTagId({
       ],
     });
 
+    const isNext = tag.questions.length > pageSize;
+    tag.questions = tag.questions.slice(0, pageSize);
+
     if (!tag) {
       throw new Error("Tag not found");
     }
-    return { tag };
+    return { tag, isNext };
   } catch (error) {
     console.log(error);
     return { questions: [] };

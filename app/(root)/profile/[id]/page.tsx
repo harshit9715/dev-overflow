@@ -13,7 +13,7 @@ import { SignedIn, auth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 
-const Profile = async ({ params: { id } }: URLProps) => {
+const Profile = async ({ params: { id }, searchParams }: URLProps) => {
   const { userId: clerkId } = auth();
   const mongoUser = await getUserById({ userId: id });
   const { tags } = await getTagByUserId({ userId: mongoUser._id });
@@ -81,19 +81,26 @@ const Profile = async ({ params: { id } }: URLProps) => {
       </div>
       <div className="mt-10 flex gap-10">
         <Tabs defaultValue="top-posts" className="flex-1">
-          <TabsList className="background-light800_dark400 text-light400_light500 min-h-[42px] p-1">
+          <TabsList className="background-light800_dark400 min-h-[42px] p-1">
             <TabsTrigger
-              className="shadow-lg bg-primary-100 text-primary-500"
+              // className="shadow-lg enabled:bg-primary-100 :text-primary-500"
               value="top-posts"
+              className="tab"
             >
               Top Posts
             </TabsTrigger>
-            <TabsTrigger value="answers">Answers</TabsTrigger>
+            <TabsTrigger
+              // className="shadow-lg enabled:bg-primary-100 enabled:text-primary-500"
+              value="answers"
+              className="tab"
+            >
+              Answers
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="top-posts">
             <div className="flex">
               <QuestionTab
-                searchParams={{}}
+                searchParams={searchParams}
                 userId={mongoUser._id}
                 clerkId={clerkId!}
               />
@@ -103,7 +110,7 @@ const Profile = async ({ params: { id } }: URLProps) => {
             <AnswerTab
               userId={mongoUser._id}
               clerkId={clerkId!}
-              searchParams={{}}
+              searchParams={searchParams}
             />
           </TabsContent>
         </Tabs>

@@ -14,7 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-const QuestionDetails = async ({ params: { id } }: URLProps) => {
+const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
   const { question } = await getQuestionById(id);
   const { userId } = auth();
   if (!userId) {
@@ -92,6 +92,8 @@ const QuestionDetails = async ({ params: { id } }: URLProps) => {
         questionId={JSON.stringify(question._id)}
         userId={JSON.stringify(mongoUser._id)}
         totalAnswers={question.answers.length}
+        filter={searchParams.filter}
+        page={searchParams.page}
       />
       <div>
         <Answer

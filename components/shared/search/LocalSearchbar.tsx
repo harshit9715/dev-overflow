@@ -1,6 +1,9 @@
 "use client";
 import { Input } from "@/components/ui/input";
+import { formUrlQuery } from "@/lib/utils";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export interface CustomInputProps {
   route: string;
@@ -17,6 +20,30 @@ const LocalSearch = ({
   placeholder,
   route,
 }: CustomInputProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParam = useSearchParams();
+
+  const query = searchParam.get("q") || "";
+
+  const [search, setSearch] = useState(query);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (search.trim().length) {
+        const newUrl = formUrlQuery({
+          params: searchParam.toString(),
+          key: "q",
+          value: search,
+        });
+        router.push(newUrl, { scroll: false });
+      } else {
+        // router.push(route);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, route, pathname, searchParam, query]);
   return (
     <div
       className={`background-light800_darkgradient flex min-h-[56px] grow items-center gap-4 rounded-xl px-4 ${otherClasses}`}
@@ -33,8 +60,8 @@ const LocalSearch = ({
       <Input
         type="text"
         placeholder={placeholder}
-        value={""}
-        onChange={() => {}}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
         className="paragraph-regular no-focus placeholder background-light800_darkgradient border-none shadow-none outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
       />
       {iconPosition === "right" && (

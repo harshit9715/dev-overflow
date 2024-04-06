@@ -1,5 +1,6 @@
 "use server";
 
+import { FilterQuery } from "mongoose";
 import Tag from "../database/tag.model";
 import User from "../database/user.model";
 import { connectDatabase } from "../mongoose";
@@ -39,15 +40,42 @@ export const getTopInteractedTags = async ({
 
 export const getAllTags = async ({
   filter,
-  page,
-  pageSize,
+  page = 1,
+  pageSize = 20,
   searchQuery,
 }: GetAllTagsParams) => {
   try {
     connectDatabase();
 
-    const tags = await Tag.find({});
-    return { tags };
+    let sortoptions = {};
+    let skip = (page - 1) * pageSize;
+    switch (filter) {
+      case "popular":
+        sortoptions = { questions: -1 };
+        break;
+      case "recent":
+        sortoptions = { createdAt: -1 };
+        break;
+      case "name":
+        sortoptions = { name: 1 };
+        break;
+      case "old":
+        sortoptions = { createdAt: 1 };
+        break;
+      default:
+        break;
+    }
+    const query: FilterQuery<typeof Tag> = {};
+    if (searchQuery) {
+      query.$or = [{ name: { $regex: new RegExp(searchQuery, "i") } }];
+    }
+    const tags = await Tag.find(query)
+      .skip(skip)
+      .limit(pageSize)
+      .sort(sortoptions);
+    const totalResults = await Tag.countDocuments(query);
+    const isNext = totalResults > skip + tags.length;
+    return { tags, isNext };
   } catch (error) {
     console.error(error);
     return { tags: [] };

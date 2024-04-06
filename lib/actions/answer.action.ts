@@ -9,6 +9,7 @@ import {
   AnswerVoteParams,
   CreateAnswerParams,
   DeleteAnswerParams,
+  GetAnswersParams,
 } from "./shared.types";
 
 export const createAnswer = async (params: CreateAnswerParams) => {
@@ -34,13 +35,44 @@ export const createAnswer = async (params: CreateAnswerParams) => {
   }
 };
 
-export const getAnswers = async (questionId: string) => {
+export const getAnswers = async ({
+  questionId,
+  sortBy,
+  page = 1,
+  pageSize = 10,
+}: GetAnswersParams) => {
   try {
     connectDatabase();
+
+    let sortOptions = {};
+    switch (sortBy) {
+      case "highestUpvotes":
+        sortOptions = { upvotes: -1 };
+        break;
+      case "lowestUpvotes":
+        sortOptions = { upvotes: 1 };
+        break;
+      case "recent":
+        sortOptions = { createdAt: -1 };
+        break;
+      case "old":
+        sortOptions = { createdAt: 1 };
+        break;
+      default:
+        break;
+    }
+
+    const skip = (page - 1) * pageSize;
+
     const answers = await Answer.find({ question: questionId })
       .populate("author")
-      .sort({ createdAt: -1 });
-    return { answers };
+      .skip(skip)
+      .limit(pageSize)
+      .sort(sortOptions);
+
+    const totalAnswers = await Answer.countDocuments({ question: questionId });
+    const isNext = totalAnswers > skip + answers.length;
+    return { answers, isNext };
   } catch (error) {
     console.error(error);
     throw new Error("Failed to fetch answers");
