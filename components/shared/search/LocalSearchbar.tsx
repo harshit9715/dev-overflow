@@ -62,7 +62,7 @@ const LocalSearch = ({
         placeholder={placeholder}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="paragraph-regular no-focus placeholder background-light800_darkgradient border-none shadow-none outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
+        className="paragraph-regular no-focus placeholder background-light800_darkgradient text-dark400_light700 border-none shadow-none outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
       />
       {iconPosition === "right" && (
         <Image

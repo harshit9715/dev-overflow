@@ -48,7 +48,7 @@ export const getAllTags = async ({
     connectDatabase();
 
     let sortoptions = {};
-    let skip = (page - 1) * pageSize;
+    const skip = (page - 1) * pageSize;
     switch (filter) {
       case "popular":
         sortoptions = { questions: -1 };
