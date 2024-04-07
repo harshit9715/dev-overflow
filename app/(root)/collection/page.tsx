@@ -7,6 +7,15 @@ import { QuestionFilters } from "@/constants/filters";
 import { getAllSavedQuestions } from "@/lib/actions/user.actions";
 import { URLProps } from "@/types";
 import { auth } from "@clerk/nextjs";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dev Overflow | Collections Page",
+  description: "Collections page of Dev Overflow",
+  icons: {
+    icon: "/assets/images/site-logo.svg",
+  },
+};
 
 const Collections = async ({ searchParams }: URLProps) => {
   const { userId } = auth();

@@ -11,7 +11,6 @@ interface UserCardProps {
 
 const UserCard = async ({ user }: UserCardProps) => {
   const interactedTags = await getTopInteractedTags({ userId: user._id });
-  console.log(interactedTags);
   return (
     <article className="background-light900_dark200 shadow-light100_darknone light-border flex flex-col items-center rounded-2xl py-8">
       <Link

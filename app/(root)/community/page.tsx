@@ -6,7 +6,16 @@ import LocalSearch from "@/components/shared/search/LocalSearchbar";
 import { UserFilters } from "@/constants/filters";
 import { getAllUsers } from "@/lib/actions/user.actions";
 import { URLProps } from "@/types";
+import { Metadata } from "next";
 import Loading from "./loading";
+
+export const metadata: Metadata = {
+  title: "Dev Overflow | Community Page",
+  description: "Community page of Dev Overflow",
+  icons: {
+    icon: "/assets/images/site-logo.svg",
+  },
+};
 
 const Community = async ({ searchParams }: URLProps) => {
   const { users, isNext } = await getAllUsers({

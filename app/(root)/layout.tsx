@@ -2,7 +2,17 @@ import LeftSidebar from "@/components/shared/LeftSidebar";
 import RightSidebar from "@/components/shared/RightSidebar";
 import Navbar from "@/components/shared/navbar/Navbar";
 import { Toaster } from "@/components/ui/sonner";
+import { Metadata } from "next";
 import React from "react";
+
+export const metadata: Metadata = {
+  title: "Dev Overflow",
+  description:
+    "Dev Overflow is a platform for developers to ask and answer questions",
+  icons: {
+    icon: "/assets/images/site-logo.svg",
+  },
+};
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
