@@ -6,8 +6,12 @@ import Pagination from "@/components/shared/Pagination";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
 import { HomePageFilters } from "@/constants/filters";
-import { getQuestions } from "@/lib/actions/question.action";
+import {
+  getQuestions,
+  getRecommendedQuestions,
+} from "@/lib/actions/question.action";
 import { URLProps } from "@/types";
+import { auth } from "@clerk/nextjs";
 import { Metadata } from "next";
 import Link from "next/link";
 
@@ -20,12 +24,35 @@ export const metadata: Metadata = {
 };
 
 const Home = async ({ searchParams }: URLProps) => {
-  const { questions, isNext } = await getQuestions({
-    searchQuery: searchParams.q,
-    filter: searchParams.filter,
-    page: searchParams.page ? +searchParams.page : 1,
-    pageSize: 15,
-  });
+  let questions = [];
+  let isNext = false;
+  if (searchParams?.filter === "recommended") {
+    const { userId } = auth();
+    if (!userId) {
+      return {
+        redirect: {
+          destination: "/login",
+          permanent: false,
+        },
+      };
+    }
+    const result = await getRecommendedQuestions({
+      page: searchParams.page ? +searchParams.page : 1,
+      pageSize: 15,
+      userId,
+    });
+    questions = result.questions;
+    isNext = result.isNext;
+  } else {
+    const result = await getQuestions({
+      searchQuery: searchParams.q,
+      filter: searchParams.filter,
+      page: searchParams.page ? +searchParams.page : 1,
+      pageSize: 15,
+    });
+    questions = result.questions;
+    isNext = result.isNext;
+  }
 
   return (
     <>

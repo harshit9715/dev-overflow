@@ -46,7 +46,7 @@ const LocalSearch = ({
   }, [search, route, pathname, searchParam, query]);
   return (
     <div
-      className={`background-light800_darkgradient flex min-h-[56px] grow items-center gap-4 rounded-xl px-4 ${otherClasses}`}
+      className={`background-light800_dark300 text-dark400_light700 flex min-h-[56px] grow items-center gap-4 rounded-xl px-4 ${otherClasses}`}
     >
       {iconPosition === "left" && (
         <Image
@@ -62,7 +62,7 @@ const LocalSearch = ({
         placeholder={placeholder}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="paragraph-regular no-focus placeholder background-light800_darkgradient text-dark400_light700 border-none shadow-none outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
+        className="background-light800_dark300 paragraph-regular no-focus placeholder text-dark400_light700 border-none shadow-none outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
       />
       {iconPosition === "right" && (
         <Image

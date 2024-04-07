@@ -38,40 +38,38 @@ const AllAnswers = async ({
       <div>
         {answers.map((answer) => (
           <article key={answer._id} className="light-border border-b py-10">
-            <div className="flex items-center justify-between">
-              {/* SPAN ID */}
-              <div className="mb-8 flex flex-col-reverse justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
-                <Link
-                  href={`/profile/${answer.author.clerkId}`}
-                  className="flex flex-1 items-start gap-1 sm:items-center"
-                >
-                  <Image
-                    src={answer.author.picture}
-                    alt={answer.author.username}
-                    width={18}
-                    height={18}
-                    className="rounded-full object-cover max-sm:mt-0.5"
-                  />
-                  <div className="flex flex-col sm:flex-row sm:items-center">
-                    <p className="body-semibold text-dark300_light700">
-                      {answer.author.name}
-                    </p>
-                    <p className="small-regular text-light400_light500 ml-1 mt-0.5 line-clamp-1">
-                      answered {getTimestamp(answer.createdAt)}
-                    </p>
-                  </div>
-                </Link>
-                <div className="flex justify-end">
-                  <Votes
-                    upvotes={answer.upvotes.length}
-                    downvotes={answer.downvotes.length}
-                    hasUpvoted={answer.upvotes.includes(JSON.parse(userId))}
-                    hasDownvoted={answer.downvotes.includes(JSON.parse(userId))}
-                    type={"answer"}
-                    itemId={JSON.stringify(answer._id)}
-                    userId={userId}
-                  />
+            {/* SPAN ID */}
+            <div className="mb-8 flex flex-col-reverse justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
+              <Link
+                href={`/profile/${answer.author.clerkId}`}
+                className="flex flex-1 items-start gap-1 sm:items-center"
+              >
+                <Image
+                  src={answer.author.picture}
+                  alt={answer.author.username}
+                  width={18}
+                  height={18}
+                  className="rounded-full object-cover max-sm:mt-0.5"
+                />
+                <div className="flex flex-col sm:flex-row sm:items-center">
+                  <p className="body-semibold text-dark300_light700">
+                    {answer.author.name}
+                  </p>
+                  <p className="small-regular text-light400_light500 ml-1 mt-0.5 line-clamp-1">
+                    answered {getTimestamp(answer.createdAt)}
+                  </p>
                 </div>
+              </Link>
+              <div className="flex justify-end">
+                <Votes
+                  upvotes={answer.upvotes.length}
+                  downvotes={answer.downvotes.length}
+                  hasUpvoted={answer.upvotes.includes(JSON.parse(userId))}
+                  hasDownvoted={answer.downvotes.includes(JSON.parse(userId))}
+                  type={"answer"}
+                  itemId={JSON.stringify(answer._id)}
+                  userId={userId}
+                />
               </div>
             </div>
             <ParseHTML data={answer.content} />

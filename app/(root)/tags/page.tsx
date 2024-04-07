@@ -30,7 +30,7 @@ const Tags = async ({ searchParams }: URLProps) => {
           otherClasses=" min-h-[56px] sm:min-w-[170px]"
         />
       </div>
-      <section className="mt-12 flex flex-wrap gap-4">
+      <section className="mt-12 flex flex-wrap justify-center gap-4">
         {tags.length > 0 ? (
           tags.map((tag) => <TagCard key={tag._id} tag={tag} />)
         ) : (

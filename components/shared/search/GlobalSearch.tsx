@@ -55,7 +55,7 @@ const GlobalSearch = () => {
       className="relative w-full max-w-[600px] max-lg:hidden"
       ref={searchContainerRef}
     >
-      <div className="background-light800_darkgradient relative flex min-h-[56px] grow items-center gap-1 rounded-xl px-4">
+      <div className="background-light800_dark300 relative flex min-h-[56px] grow items-center gap-1 rounded-xl px-4">
         <Image
           src={"/assets/icons/search.svg"}
           width={24}
@@ -76,7 +76,7 @@ const GlobalSearch = () => {
             }
           }}
           placeholder="Search anything globally..."
-          className="paragraph-regular no-focus placeholder background-light800_darkgradient text-dark400_light700 border-none shadow-none outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
+          className="paragraph-regular no-focus placeholder background-light800_dark300 text-dark400_light700 border-none shadow-none outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
         />
       </div>
       {isOpen && <GlobalResult />}
