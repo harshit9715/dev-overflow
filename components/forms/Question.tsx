@@ -20,6 +20,7 @@ import { QuestionsSchema } from "@/lib/validations";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { KeyboardEvent, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -30,7 +31,11 @@ interface QuestionProps {
   questionDetails?: string;
 }
 
-const Question = ({ mongoUserId, type, questionDetails }: QuestionProps) => {
+const Question = ({
+  mongoUserId,
+  type = "Create",
+  questionDetails,
+}: QuestionProps) => {
   const { mode } = useTheme();
   const editorRef = useRef(null);
   const router = useRouter();
@@ -88,21 +93,35 @@ const Question = ({ mongoUserId, type, questionDetails }: QuestionProps) => {
     try {
       if (type === "Edit") {
         // edit question
-        await editQuestion({
+        const editPromise = editQuestion({
           title: values.title,
           content: values.explanation,
           questionId: parsedQuestionDetails._id,
           path: pathname,
         });
+        toast.promise(editPromise, {
+          loading: "Loading...",
+          success: (data) => {
+            return "Question edited successfully.";
+          },
+          error: "Error",
+        });
         // navigate to question page
         router.push(`/questions/${parsedQuestionDetails._id}`);
       } else {
-        await createQuestion({
+        const questionPromise = createQuestion({
           title: values.title,
           content: values.explanation,
           tags: values.tags,
           author: JSON.parse(mongoUserId),
           path: pathname,
+        });
+        toast.promise(questionPromise, {
+          loading: "Loading...",
+          success: (data) => {
+            return "Question posted successfully.";
+          },
+          error: "Error",
         });
         router.push("/");
       }

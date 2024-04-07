@@ -6,6 +6,7 @@ import LocalSearch from "@/components/shared/search/LocalSearchbar";
 import { UserFilters } from "@/constants/filters";
 import { getAllUsers } from "@/lib/actions/user.actions";
 import { URLProps } from "@/types";
+import Loading from "./loading";
 
 const Community = async ({ searchParams }: URLProps) => {
   const { users, isNext } = await getAllUsers({
@@ -14,6 +15,9 @@ const Community = async ({ searchParams }: URLProps) => {
     page: searchParams.page ? +searchParams.page : 1,
     pageSize: 20,
   });
+
+  const loading = false;
+  if (loading) return <Loading />;
   return (
     <>
       <h1 className="h1-bold text-dark100_light900">All Users</h1>

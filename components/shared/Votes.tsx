@@ -7,6 +7,7 @@ import { bigNumberToString } from "@/lib/utils";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 interface VoteProps {
   upvotes: number;
@@ -43,7 +44,10 @@ const Votes = ({
   }, [itemId, userId, pathname, router, type]);
 
   const handleVote = async (voteType: "upvote" | "downvote") => {
-    if (!userId) return;
+    if (!userId)
+      return toast("Please sign in", {
+        description: "You need to sign in to vote",
+      });
     if (type === "question") {
       voteQuestion({
         questionId: JSON.parse(itemId),
@@ -60,8 +64,15 @@ const Votes = ({
         hasupVoted: voteType === "upvote",
         path: pathname,
       });
-      // todo: show a toast
     }
+    // todo: show a toast
+    return toast.success(
+      hasUpvoted && voteType === "upvote"
+        ? `Removed your upvote from the ${type}`
+        : hasDownvoted && voteType === "downvote"
+          ? `Removed your downvote from the ${type}`
+          : `Added your ${voteType} to the ${type}`
+    );
   };
   const handleSave = async () => {
     if (!userId) return;
@@ -70,6 +81,7 @@ const Votes = ({
       userId: JSON.parse(userId),
       path: pathname,
     });
+    return toast.info(hasSaved ? "Removed from saved" : "Question saved", {});
   };
   return (
     <div className="flex gap-5">

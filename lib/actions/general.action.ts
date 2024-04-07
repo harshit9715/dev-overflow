@@ -95,3 +95,28 @@ export async function globalSearch({ query, type }: SearchParams) {
     throw new Error("Error in globalSearch");
   }
 }
+
+export async function fetchOpenAICompletion(content: string) {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert software developer. You are helping a junior developer understand a complex concept.",
+        },
+        {
+          role: "user",
+          content,
+        },
+      ],
+    }),
+  });
+  return response.json();
+}

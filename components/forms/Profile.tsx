@@ -18,6 +18,7 @@ import { updateUser } from "@/lib/actions/user.actions";
 import { ProfileSchema } from "@/lib/validations";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface Params {
   clerkId: string;
@@ -44,7 +45,19 @@ const ProfileForm = ({ clerkId, userObjString }: Params) => {
     setIsSubmitting(true);
     try {
       // updateUser
-      await updateUser({ clerkId, updateData: values, path: pathname });
+      const updateProfilePromise = updateUser({
+        clerkId,
+        updateData: values,
+        path: pathname,
+      });
+      toast.promise(updateProfilePromise, {
+        loading: "Saving...",
+        success: (data) => {
+          setIsSubmitting(false);
+          return "Profile updated successfully";
+        },
+        error: "An error occurred. Please try again later.",
+      });
       router.back();
     } catch (error) {
       console.log(error);
@@ -56,7 +69,7 @@ const ProfileForm = ({ clerkId, userObjString }: Params) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="mt-9 flex flex-col w-full gap-9"
+        className="mt-9 flex w-full flex-col gap-9"
       >
         <FormField
           control={form.control}

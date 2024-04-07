@@ -8,6 +8,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 import { Button } from "../ui/button";
 import {
@@ -29,6 +30,7 @@ const Answer = ({ question, questionId, authorId }: AnswerProps) => {
   const { mode } = useTheme();
   const pathname = usePathname();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingAi, setIsSubmittingAi] = useState(false);
 
   const form = useForm<z.infer<typeof AnswerSchema>>({
     resolver: zodResolver(AnswerSchema),
@@ -40,11 +42,16 @@ const Answer = ({ question, questionId, authorId }: AnswerProps) => {
   const handleCreateAnswer = async (values: z.infer<typeof AnswerSchema>) => {
     setIsSubmitting(true);
     try {
-      await createAnswer({
+      const createAnswerPromise = createAnswer({
         content: values.answer,
         author: JSON.parse(authorId),
         path: pathname,
         question: JSON.parse(questionId),
+      });
+      toast.promise(createAnswerPromise, {
+        loading: "Submitting...",
+        success: "Answer submitted successfully",
+        error: "An error occurred. Please try again later.",
       });
       form.reset();
 
@@ -59,6 +66,42 @@ const Answer = ({ question, questionId, authorId }: AnswerProps) => {
     }
   };
 
+  const generateAIAnswer = async () => {
+    if (!authorId) return;
+    setIsSubmittingAi(true);
+    try {
+      // make api call
+      const aiAnswer = fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chatgpt`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            question,
+          }),
+        }
+      ).then((res) => res.json());
+      let formattedAnswer = "";
+      toast.promise(aiAnswer, {
+        loading: "Generating...",
+        success: (aiAnswer) => {
+          formattedAnswer = aiAnswer.reply.replace(/\n/g, "<br />");
+          if (editorRef.current) {
+            // @ts-ignore
+            editorRef.current.setContent(formattedAnswer);
+          }
+          setIsSubmittingAi(false);
+          return "AI Answer generated successfully";
+        },
+        error: "An error occurred. Please try again later.",
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
@@ -66,17 +109,24 @@ const Answer = ({ question, questionId, authorId }: AnswerProps) => {
           Write your answer here...
         </h4>
         <Button
-          onClick={() => {}}
+          onClick={generateAIAnswer}
+          disabled={isSubmittingAi}
           className="btn light-border-2 gap-1.5 rounded-md px-4 py-2.5 text-primary-500"
         >
-          <Image
-            src={"/assets/icons/stars.svg"}
-            alt="star icon"
-            height={12}
-            width={12}
-            className="object-contain"
-          />
-          Generate an AI Answer
+          {isSubmittingAi ? (
+            <> Generating...</>
+          ) : (
+            <>
+              <Image
+                src={"/assets/icons/stars.svg"}
+                alt="star icon"
+                height={12}
+                width={12}
+                className="object-contain"
+              />
+              Generate AI Answer
+            </>
+          )}
         </Button>
       </div>
       <Form {...form}>

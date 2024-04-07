@@ -35,7 +35,7 @@ const AnswerCard = ({
           <span className="subtle-regular text-dark400_light700 line-clamp-1 flex sm:hidden">
             {getTimestamp(createdAt)}
           </span>
-          <Link href={`/questions/${id}`}>
+          <Link href={`/questions/${question.id}`}>
             <h3 className="sm:h3-semibold base-semibold text-dark200_light900 line-clamp-1 flex-1">
               {question.title}
             </h3>

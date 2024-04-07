@@ -8,6 +8,7 @@ import Question from "../database/question.model";
 import Tag from "../database/tag.model";
 import User from "../database/user.model";
 import { connectDatabase } from "../mongoose";
+import { fetchOpenAICompletion } from "./general.action";
 import {
   CreateQuestionParams,
   DeleteQuestionParams,
@@ -27,41 +28,47 @@ export async function createQuestion(params: CreateQuestionParams) {
       author,
     });
 
-    const tagDocuments = [];
+    const tagDocuments = [] as string[];
 
-    for (const tag of tags) {
-      const existingTag = await Tag.findOneAndUpdate(
-        {
-          name: {
-            $regex: new RegExp(`^${tag}$`, "i"),
-          },
-        },
-        {
-          $setOnInsert: { name: tag },
-          $push: { questions: question._id },
-        },
-        {
-          upsert: true,
-          new: true,
+    await Promise.all(
+      tags.map(async (tag) => {
+        const existingTag = await Tag.findOne({
+          name: { $regex: new RegExp(`^${tag}$`, "i") },
+        });
+
+        if (existingTag) {
+          existingTag.questions.push(question._id);
+          await existingTag.save();
+          tagDocuments.push(existingTag._id);
+        } else {
+          const response = await fetchOpenAICompletion(
+            `a brief description of the ${tag} in less than 100 characters in plaintext.`
+          );
+          const reply = response.choices[0].message.content;
+
+          const newTag = await Tag.create({
+            name: tag,
+            description: reply,
+            questions: [question._id],
+          });
+          tagDocuments.push(newTag._id);
         }
-      );
-      tagDocuments.push(existingTag._id);
-    }
+      })
+    );
 
-    // update question with tags
     await Question.findByIdAndUpdate(question._id, {
       $push: { tags: { $each: tagDocuments } },
     });
 
-    // create an interaction record  for user's ask_question action
     await Interaction.create({
       user: author,
       action: "ask_question",
       question: question._id,
       tags: tagDocuments,
     });
-    // increment author's reputation by +5 points for creating a question
+
     await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } });
+
     revalidatePath(path);
   } catch (error) {
     console.log(error);
@@ -154,10 +161,11 @@ export async function voteQuestion({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: -1 },
         });
-
-        await User.findByIdAndUpdate(question.author, {
-          $inc: { reputation: -10 },
-        });
+        if (question.author.toString() !== userId) {
+          await User.findByIdAndUpdate(question.author, {
+            $inc: { reputation: -10 },
+          });
+        }
       } else {
         let times = 1;
         if (question.downvotes.includes(userId)) {
@@ -168,10 +176,11 @@ export async function voteQuestion({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: times * 1 },
         });
-
-        await User.findByIdAndUpdate(question.author, {
-          $inc: { reputation: times * 10 },
-        });
+        if (question.author.toString() !== userId) {
+          await User.findByIdAndUpdate(question.author, {
+            $inc: { reputation: times * 10 },
+          });
+        }
       }
     }
     if (hasdownVoted) {
@@ -180,9 +189,11 @@ export async function voteQuestion({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: 1 },
         });
-        await User.findByIdAndUpdate(question.author, {
-          $inc: { reputation: 10 },
-        });
+        if (question.author.toString() !== userId) {
+          await User.findByIdAndUpdate(question.author, {
+            $inc: { reputation: 10 },
+          });
+        }
       } else {
         let times = 1;
         if (question.upvotes.includes(userId)) {
@@ -193,9 +204,11 @@ export async function voteQuestion({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: -1 * times },
         });
-        await User.findByIdAndUpdate(question.author, {
-          $inc: { reputation: -10 * times },
-        });
+        if (question.author.toString() !== userId) {
+          await User.findByIdAndUpdate(question.author, {
+            $inc: { reputation: -10 * times },
+          });
+        }
       }
     }
 

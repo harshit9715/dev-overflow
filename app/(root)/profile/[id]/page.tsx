@@ -77,6 +77,9 @@ const Profile = async ({ params: { id }, searchParams }: URLProps) => {
         </div>
       </div>
       <div className="">
+        <h2 className="h2-semibold text-dark100_light900 mt-10">
+          Stats: {mongoUser.reputation}
+        </h2>
         <Stats userId={mongoUser._id!} />
       </div>
       <div className="mt-10 flex gap-10">

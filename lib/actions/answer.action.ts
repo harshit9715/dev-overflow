@@ -108,9 +108,11 @@ export const voteAnswer = async ({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: -2 },
         });
-        await User.findByIdAndUpdate(answer.author, {
-          $inc: { reputation: -5 },
-        });
+        if (answer.author.toString() !== userId) {
+          await User.findByIdAndUpdate(answer.author, {
+            $inc: { reputation: -5 },
+          });
+        }
       } else {
         let times = 1;
         if (answer.downvotes.includes(userId)) {
@@ -125,9 +127,11 @@ export const voteAnswer = async ({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: 2 * times },
         });
-        await User.findByIdAndUpdate(answer.author, {
-          $inc: { reputation: 5 * times },
-        });
+        if (answer.author.toString() !== userId) {
+          await User.findByIdAndUpdate(answer.author, {
+            $inc: { reputation: 5 * times },
+          });
+        }
       }
     } else if (hasdownVoted) {
       if (answer.downvotes.includes(userId)) {
@@ -135,9 +139,11 @@ export const voteAnswer = async ({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: 2 },
         });
-        await User.findByIdAndUpdate(answer.author, {
-          $inc: { reputation: 5 },
-        });
+        if (answer.author.toString() !== userId) {
+          await User.findByIdAndUpdate(answer.author, {
+            $inc: { reputation: 5 },
+          });
+        }
       } else {
         let times = 1;
         if (answer.upvotes.includes(userId)) {
@@ -152,9 +158,11 @@ export const voteAnswer = async ({
         await User.findByIdAndUpdate(userId, {
           $inc: { reputation: -2 * times },
         });
-        await User.findByIdAndUpdate(answer.author, {
-          $inc: { reputation: -5 * times },
-        });
+        if (answer.author.toString() !== userId) {
+          await User.findByIdAndUpdate(answer.author, {
+            $inc: { reputation: -5 * times },
+          });
+        }
       }
     }
     revalidatePath(path);

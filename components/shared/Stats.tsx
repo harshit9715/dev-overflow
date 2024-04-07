@@ -24,7 +24,9 @@ const StatsCard = ({ imgUrl, value, title }: StatCardProps) => {
 };
 
 const Stats = async ({ userId }: props) => {
-  const { totalAnswers, totalQuestions } = await getUserStats({ userId });
+  const { totalAnswers, totalQuestions, badgeCounts } = await getUserStats({
+    userId,
+  });
   return (
     <div className="mt-10">
       <h4 className="h3-semibold text-dark200_light900">
@@ -45,17 +47,17 @@ const Stats = async ({ userId }: props) => {
           </div>
           <StatsCard
             imgUrl={"/assets/icons/gold-medal.svg"}
-            value={0}
+            value={badgeCounts.GOLD}
             title="Gold Badges"
           />
           <StatsCard
             imgUrl={"/assets/icons/silver-medal.svg"}
-            value={0}
+            value={badgeCounts.SILVER}
             title="Silver Badges"
           />
           <StatsCard
             imgUrl={"/assets/icons/bronze-medal.svg"}
-            value={0}
+            value={badgeCounts.BRONZE}
             title="Bronze Badges"
           />
         </div>
