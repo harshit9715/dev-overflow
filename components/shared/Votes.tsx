@@ -40,7 +40,7 @@ const Votes = ({
         userId: userId ? JSON.parse(userId) : undefined,
       });
     }
-  }, [itemId, userId, pathname, router]);
+  }, [itemId, userId, pathname, router, type]);
 
   const handleVote = async (voteType: "upvote" | "downvote") => {
     if (!userId) return;

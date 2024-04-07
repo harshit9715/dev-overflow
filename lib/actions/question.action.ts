@@ -54,11 +54,18 @@ export async function createQuestion(params: CreateQuestionParams) {
     });
 
     // create an interaction record  for user's ask_question action
-
+    await Interaction.create({
+      user: author,
+      action: "ask_question",
+      question: question._id,
+      tags: tagDocuments,
+    });
     // increment author's reputation by +5 points for creating a question
-
+    await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } });
     revalidatePath(path);
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 export async function getQuestions(params: GetQuestionsParams) {
@@ -144,25 +151,54 @@ export async function voteQuestion({
     if (hasupVoted) {
       if (question.upvotes.includes(userId)) {
         await question.updateOne({ $pull: { upvotes: userId } });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: -1 },
+        });
+
+        await User.findByIdAndUpdate(question.author, {
+          $inc: { reputation: -10 },
+        });
       } else {
+        let times = 1;
         if (question.downvotes.includes(userId)) {
           await question.updateOne({ $pull: { downvotes: userId } });
+          times = 2;
         }
         await question.updateOne({ $push: { upvotes: userId } });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: times * 1 },
+        });
+
+        await User.findByIdAndUpdate(question.author, {
+          $inc: { reputation: times * 10 },
+        });
       }
     }
     if (hasdownVoted) {
       if (question.downvotes.includes(userId)) {
         await question.updateOne({ $pull: { downvotes: userId } });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: 1 },
+        });
+        await User.findByIdAndUpdate(question.author, {
+          $inc: { reputation: 10 },
+        });
       } else {
+        let times = 1;
         if (question.upvotes.includes(userId)) {
           await question.updateOne({ $pull: { upvotes: userId } });
+          times = 2;
         }
         await question.updateOne({ $push: { downvotes: userId } });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: -1 * times },
+        });
+        await User.findByIdAndUpdate(question.author, {
+          $inc: { reputation: -10 * times },
+        });
       }
     }
 
-    // increment author's reputation by +5 points for voting a question
     revalidatePath(path);
   } catch (error) {
     console.log(error);

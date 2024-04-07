@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import Answer from "../database/answer.model";
 import Interaction from "../database/interaction.model";
 import Question from "../database/question.model";
+import User from "../database/user.model";
 import { connectDatabase } from "../mongoose";
 import {
   AnswerVoteParams,
@@ -22,11 +23,22 @@ export const createAnswer = async (params: CreateAnswerParams) => {
       content,
     });
 
-    await Question.findByIdAndUpdate(question, {
+    const questionObject = await Question.findByIdAndUpdate(question, {
       $push: { answers: answer._id },
     });
 
     // Todo: add interaction to the user
+    await Interaction.create({
+      user: author,
+      action: "answer",
+      question,
+      answer: answer._id,
+      tags: questionObject.tags,
+    });
+
+    await User.findByIdAndUpdate(author, {
+      $inc: { reputation: 10 },
+    });
 
     revalidatePath(path);
   } catch (error) {
@@ -90,27 +102,61 @@ export const voteAnswer = async ({
     connectDatabase();
     const answer = await Answer.findById(answerId);
     if (!answer) throw new Error("Answer not found");
-
     if (hasupVoted) {
       if (answer.upvotes.includes(userId)) {
         await answer.updateOne({ $pull: { upvotes: userId } });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: -2 },
+        });
+        await User.findByIdAndUpdate(answer.author, {
+          $inc: { reputation: -5 },
+        });
       } else {
+        let times = 1;
+        if (answer.downvotes.includes(userId)) {
+          times = 2;
+          await answer.updateOne({
+            $pull: { downvotes: userId },
+          });
+        }
         await answer.updateOne({
           $push: { upvotes: userId },
-          $pull: { downvotes: userId },
+        });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: 2 * times },
+        });
+        await User.findByIdAndUpdate(answer.author, {
+          $inc: { reputation: 5 * times },
         });
       }
     } else if (hasdownVoted) {
       if (answer.downvotes.includes(userId)) {
         await answer.updateOne({ $pull: { downvotes: userId } });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: 2 },
+        });
+        await User.findByIdAndUpdate(answer.author, {
+          $inc: { reputation: 5 },
+        });
       } else {
+        let times = 1;
+        if (answer.upvotes.includes(userId)) {
+          times = 2;
+          await answer.updateOne({
+            $pull: { upvotes: userId },
+          });
+        }
         await answer.updateOne({
           $push: { downvotes: userId },
-          $pull: { upvotes: userId },
+        });
+        await User.findByIdAndUpdate(userId, {
+          $inc: { reputation: -2 * times },
+        });
+        await User.findByIdAndUpdate(answer.author, {
+          $inc: { reputation: -5 * times },
         });
       }
     }
-
     revalidatePath(path);
   } catch (error) {
     console.error(error);

@@ -27,7 +27,7 @@ const AllAnswers = async ({
     questionId: JSON.parse(questionId),
     page: page ? +page : 1,
     sortBy: filter,
-    pageSize: 1,
+    pageSize: 10,
   });
   return (
     <div className="mt-11 ">
@@ -56,7 +56,7 @@ const AllAnswers = async ({
                     <p className="body-semibold text-dark300_light700">
                       {answer.author.name}
                     </p>
-                    <p className="small-regular text-light400_light500 mt-0.5 line-clamp-1 ml-1">
+                    <p className="small-regular text-light400_light500 ml-1 mt-0.5 line-clamp-1">
                       answered {getTimestamp(answer.createdAt)}
                     </p>
                   </div>

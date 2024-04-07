@@ -10,7 +10,6 @@ export async function viewItem(params: ViewItemParams) {
   try {
     connectDatabase();
     const { type, itemId, userId } = params;
-    console.log("Viewing item", type, itemId, userId);
     if (userId) {
       const query: Record<string, string> = {
         user: userId,
@@ -22,7 +21,7 @@ export async function viewItem(params: ViewItemParams) {
         query.answer = itemId;
       }
       const exisitingInteraction = await Interaction.findOne(query);
-      if (exisitingInteraction) return console.log("Already viewed");
+      if (exisitingInteraction) return;
 
       // update view count for question
       if (type === "question") {
