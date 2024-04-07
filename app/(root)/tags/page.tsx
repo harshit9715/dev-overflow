@@ -22,7 +22,7 @@ const Tags = async ({ searchParams }: URLProps) => {
           route="/tags"
           iconPosition="left"
           imgSrc="/assets/icons/search.svg"
-          placeholder="Search amazing minds here..."
+          placeholder="Search keywords to find questions linked to them..."
           otherClasses="flex-1"
         />
         <Filter
