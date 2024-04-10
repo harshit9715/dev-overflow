@@ -31,6 +31,7 @@
     "mongoose": "^8.3.0",
     "next": "14.1.4",
     "next-themes": "^0.3.0",
+    "posthog-js": "^1.121.1",
     "prismjs": "^1.29.0",
     "query-string": "^9.0.0",
     "react": "^18",
@@ -42,6 +43,8 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@spotlightjs/sidecar": "^1.4.0",
+    "@spotlightjs/spotlight": "^1.2.17",
     "@tailwindcss/typography": "^0.5.12",
     "@types/node": "^20",
     "@types/prismjs": "^1.26.3",

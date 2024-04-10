@@ -1895,6 +1895,24 @@
     "@sentry/cli" "^1.77.1"
     webpack-sources "^2.0.0 || ^3.0.0"
 
+"@spotlightjs/overlay@1.8.3":
+  version "1.8.3"
+  resolved "https://registry.yarnpkg.com/@spotlightjs/overlay/-/overlay-1.8.3.tgz#bfc235323116d899c0d82e0510b22309ebdeed06"
+  integrity sha512-6b5tBspOOEd6Gj0l4xgdUwR4Ydn2dNX9lqJ/WSzIu1lqkI96w2lqf69IGzEo6jb9aPtfTtu8nx5K2SD6JXH2SA==
+
+"@spotlightjs/sidecar@1.4.0", "@spotlightjs/sidecar@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@spotlightjs/sidecar/-/sidecar-1.4.0.tgz#8cbd7b620e718723a9507c5b7975d7d379685cdd"
+  integrity sha512-onj/phrNtDI8a79zc8jfxJ5BITQk5klO4xSoQXxiYeQWTZcegVeO8VftOVfWPBnMY/axnh+ltxJm/cHaV5SP6Q==
+
+"@spotlightjs/spotlight@^1.2.17":
+  version "1.2.17"
+  resolved "https://registry.yarnpkg.com/@spotlightjs/spotlight/-/spotlight-1.2.17.tgz#f39e77b6504ea933b7465f104248f26ce6f7fed4"
+  integrity sha512-91qtnLspMl2e1olBTeWoZcupwwTzQs8clQgTF8wv2Ib18zce7YYLvWpnDhNIVNQlbKIjGhYum6UY/KCfUCXQYg==
+  dependencies:
+    "@spotlightjs/overlay" "1.8.3"
+    "@spotlightjs/sidecar" "1.4.0"
+
 "@stablelib/base64@^1.0.0":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@stablelib/base64/-/base64-1.0.1.tgz#bdfc1c6d3a62d7a3b7bbc65b6cce1bb4561641be"
@@ -3434,6 +3452,11 @@ fastq@^1.6.0:
   dependencies:
     reusify "^1.0.4"
 
+fflate@^0.4.8:
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/fflate/-/fflate-0.4.8.tgz#f90b82aefbd8ac174213abb338bd7ef848f0f5ae"
+  integrity sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==
+
 file-entry-cache@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/file-entry-cache/-/file-entry-cache-8.0.0.tgz#7787bddcf1131bffb92636c69457bbc0edd6d81f"
@@ -4892,6 +4915,19 @@ postcss@^8, postcss@^8.4.23, postcss@^8.4.4:
     nanoid "^3.3.7"
     picocolors "^1.0.0"
     source-map-js "^1.2.0"
+
+posthog-js@^1.121.1:
+  version "1.121.1"
+  resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.121.1.tgz#22835e0d5d459b4ab7e09e957e547994d8b89e6c"
+  integrity sha512-RKVVnhr3Lhs8RWJfkv4S4wdtUOz64wJvFkadG3X5gJ/AB8fB794tB0oK3RG3hNHfXeaA/9dnD6UUgiQLaHKR0w==
+  dependencies:
+    fflate "^0.4.8"
+    preact "^10.19.3"
+
+preact@^10.19.3:
+  version "10.20.2"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.20.2.tgz#0b343299a8c020562311cc25db93b3d832ec5e71"
+  integrity sha512-S1d1ernz3KQ+Y2awUxKakpfOg2CEmJmwOP+6igPx6dgr6pgDvenqYviyokWso2rhHvGtTlWWnJDa7RaPbQerTg==
 
 prelude-ls@^1.2.1:
   version "1.2.1"
