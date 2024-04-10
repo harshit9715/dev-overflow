@@ -2,9 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Metadata } from "next";
 import { Inter, Space_Grotesk as SpaceGrotesk } from "next/font/google";
 import React from "react";
-import { PHProvider } from "./providers";
 
-import PostHogPageView from "@/components/shared/PostHogPageView";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import "../styles/prism.css";
 import "./globals.css";
@@ -32,22 +30,18 @@ export const metadata: Metadata = {
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
-      <PHProvider>
-        <body className={`${inter.variable} ${spaceGrotesk.variable}`}>
-          <PostHogPageView />
-          <ClerkProvider
-            appearance={{
-              elements: {
-                formButtonPrimary: "primary-gradient",
-                footerActionLink:
-                  "primary-text-gradient hover: text-primary-500",
-              },
-            }}
-          >
-            <ThemeProvider>{children}</ThemeProvider>
-          </ClerkProvider>
-        </body>
-      </PHProvider>
+      <body className={`${inter.variable} ${spaceGrotesk.variable}`}>
+        <ClerkProvider
+          appearance={{
+            elements: {
+              formButtonPrimary: "primary-gradient",
+              footerActionLink: "primary-text-gradient hover: text-primary-500",
+            },
+          }}
+        >
+          <ThemeProvider>{children}</ThemeProvider>
+        </ClerkProvider>
+      </body>
     </html>
   );
 };
