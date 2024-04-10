@@ -2,16 +2,37 @@ import LeftSidebar from "@/components/shared/LeftSidebar";
 import RightSidebar from "@/components/shared/RightSidebar";
 import Navbar from "@/components/shared/navbar/Navbar";
 import { Toaster } from "@/components/ui/sonner";
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
+  applicationName: "Dev Overflow",
   title: "Dev Overflow",
   description:
     "Dev Overflow is a platform for developers to ask and answer questions",
-  icons: {
-    icon: "/assets/images/site-logo.svg",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Dev Overflow",
+    // startUpImage: [],
   },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    apple: [
+      {
+        url: "/",
+        sizes: "192x192",
+        href: "/assets/pwa/192.png",
+      },
+    ],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FF7000",
 };
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
