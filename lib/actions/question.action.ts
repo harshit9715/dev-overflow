@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  default as combinedQuery,
+  default as comineQuery,
+} from "graphql-combine-query";
 import { FilterQuery } from "mongoose";
 import { revalidatePath } from "next/cache";
 import Answer from "../database/answer.model";
@@ -7,6 +11,13 @@ import Interaction from "../database/interaction.model";
 import Question from "../database/question.model";
 import Tag from "../database/tag.model";
 import User from "../database/user.model";
+import {
+  GetTagIdByLabelDocument,
+  GetTagIdByLabelQuery,
+  LinkQuestionTagDocument,
+  QuestionTags,
+} from "../gql/types";
+import { getGraphQLClient, getGraphQLRawClient } from "../graphql-client";
 import { connectDatabase } from "../mongoose";
 import { fetchOpenAICompletion } from "./general.action";
 import {
@@ -15,11 +26,12 @@ import {
   EditQuestionParams,
   GetQuestionsByTagIdParams,
   GetQuestionsParams,
+  GetQuestionsParamsDynamo,
   QuestionVoteParams,
   RecommendedParams,
 } from "./shared.types";
 
-export async function createQuestion(params: CreateQuestionParams) {
+export async function createQuestionOld(params: CreateQuestionParams) {
   try {
     connectDatabase();
     const { title, tags, content, author, path } = params;
@@ -76,7 +88,7 @@ export async function createQuestion(params: CreateQuestionParams) {
   }
 }
 
-export async function getQuestions(params: GetQuestionsParams) {
+export async function getQuestionsOld(params: GetQuestionsParams) {
   try {
     connectDatabase();
     const { searchQuery, filter, page = 1, pageSize = 1 } = params;
@@ -299,7 +311,7 @@ export const editQuestion = async (params: EditQuestionParams) => {
   }
 };
 
-export const getHotQuestions = async () => {
+export const getHotQuestionsOld = async () => {
   try {
     const hotQuestions = await Question.find({})
       .sort({
@@ -384,3 +396,105 @@ export async function getRecommendedQuestions(params: RecommendedParams) {
     throw error;
   }
 }
+
+export async function createQuestion(params: CreateQuestionParams) {
+  try {
+    const { title, tags, content, author, path } = params;
+
+    const tagDocuments = [] as string[];
+
+    const tagMap = await handleTagsUpsert(tags);
+
+    const client = await getGraphQLClient();
+    const rawClient = await getGraphQLRawClient();
+    const createQueRes = await client.createQuestion({
+      title,
+      content,
+    });
+    if (createQueRes.createQuestion?.id) {
+      const { document, variables } = combinedQuery(
+        "linkQuestionWithTags"
+      ).addN(
+        LinkQuestionTagDocument,
+        Object.values(tagMap).map((tag) => ({
+          questionId: createQueRes.createQuestion!.id,
+          tagId: tag,
+        }))
+      );
+      await rawClient.request<Record<string, QuestionTags>>(
+        document,
+        variables
+      );
+    }
+    // console.log(JSON.stringify(response, null, 2));
+    revalidatePath(path);
+  } catch (error: any) {
+    console.log(JSON.stringify(error.response));
+    throw new Error("Error creating question");
+  }
+}
+
+const handleTagsUpsert = async (tags: string[]) => {
+  let tagMap: Record<string, string> = {};
+  const rawClient = await getGraphQLRawClient();
+  const client = await getGraphQLClient();
+  const { document, variables } = comineQuery("tagsByLabel").addN(
+    GetTagIdByLabelDocument,
+    tags.map((tag) => ({ label: tag }))
+  );
+  const response = await rawClient.request<
+    Record<string, GetTagIdByLabelQuery["tagsByLabel"]>
+  >(document, variables);
+
+  for (let [index, tagRes] of Object.values(response).entries()) {
+    if (tagRes?.items.length) {
+      tagMap[tags[index]] = tagRes.items[0]?.id || "";
+    } else {
+      const response = await fetchOpenAICompletion(
+        `a brief description of the ${tags[index]} in less than 100 characters in plaintext.`
+      );
+      const reply = response.choices[0].message.content;
+      const createTagRes = await client.createTag({
+        label: tags[index],
+        description: reply,
+      });
+      tagMap[tags[index]] = createTagRes.createTag?.id || "";
+    }
+  }
+  return tagMap;
+};
+
+export async function getQuestions(params: GetQuestionsParamsDynamo) {
+  try {
+    const { searchQuery, filter, token = undefined, pageSize = 25 } = params;
+    const client = await getGraphQLClient();
+
+    const questions = await client.HomeQuestions({
+      filter: searchQuery ? { title: { contains: searchQuery } } : undefined,
+      nextToken: token,
+      limit: pageSize,
+    });
+    // console.log(JSON.stringify(questions, null, 2));
+    return {
+      questions: questions.listQuestions?.items || [],
+      isNext: questions.listQuestions?.nextToken,
+    };
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error fetching questions");
+  }
+}
+
+export const getHotQuestions = async () => {
+  try {
+    const client = await getGraphQLClient();
+    const questions = await client.HotQuestions({
+      limit: 10,
+    });
+    console.log(JSON.stringify(questions, null, 2));
+    return { hotQuestions: questions.listQuestions?.items || [] };
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error fetching hot questions");
+  }
+};

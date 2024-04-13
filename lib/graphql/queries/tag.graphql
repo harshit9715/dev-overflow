@@ -1,0 +1,9 @@
+#import "../fragments/tag.graphql"
+
+query getTagIdByLabel($label: String!) {
+  tagsByLabel(label: $label) {
+    items {
+      ...TagIdByLabel
+    }
+  }
+}

@@ -5,13 +5,13 @@ import { Button } from "../ui/button";
 
 interface Props {
   pageNumber?: number;
-  isNext?: boolean;
+  isNext?: string | null;
   scrollToTop?: boolean;
 }
 
 const Pagination = ({
   pageNumber = 1,
-  isNext = false,
+  isNext = undefined,
   scrollToTop = true,
 }: Props) => {
   const router = useRouter();

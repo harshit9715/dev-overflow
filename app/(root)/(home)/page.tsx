@@ -6,10 +6,7 @@ import Pagination from "@/components/shared/Pagination";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
 import { HomePageFilters } from "@/constants/filters";
-import {
-  getQuestions,
-  getRecommendedQuestions,
-} from "@/lib/actions/question.action";
+import { getQuestions } from "@/lib/actions/question.action";
 import { URLProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 import { Metadata } from "next";
@@ -24,35 +21,36 @@ export const metadata: Metadata = {
 };
 
 const Home = async ({ searchParams }: URLProps) => {
-  let questions = [];
-  let isNext = false;
-  if (searchParams?.filter === "recommended") {
-    const { userId } = auth();
-    if (!userId) {
-      return {
-        redirect: {
-          destination: "/login",
-          permanent: false,
-        },
-      };
-    }
-    const result = await getRecommendedQuestions({
-      page: searchParams.page ? +searchParams.page : 1,
-      pageSize: 15,
-      userId,
-    });
-    questions = result.questions;
-    isNext = result.isNext;
-  } else {
-    const result = await getQuestions({
-      searchQuery: searchParams.q,
-      filter: searchParams.filter,
-      page: searchParams.page ? +searchParams.page : 1,
-      pageSize: 15,
-    });
-    questions = result.questions;
-    isNext = result.isNext;
-  }
+  const { getToken } = auth();
+  const token = await getToken({ template: "GraphQlOidc" });
+  console.log("token", token);
+  // let questions = [];
+  // let isNext = false;
+  // if (searchParams?.filter === "recommended") {
+  //   const { userId } = auth();
+  //   if (!userId) {
+  //     return {
+  //       redirect: {
+  //         destination: "/login",
+  //         permanent: false,
+  //       },
+  //     };
+  //   }
+  //   const result = await getRecommendedQuestions({
+  //     page: searchParams.page ? +searchParams.page : 1,
+  //     pageSize: 15,
+  //     userId,
+  //   });
+  //   questions = result.questions;
+  //   isNext = result.isNext;
+  // } else {
+  const { questions, isNext } = await getQuestions({
+    searchQuery: searchParams.q,
+    filter: searchParams.filter,
+    token: undefined,
+    pageSize: 15,
+  });
+  // }
 
   return (
     <>
@@ -83,16 +81,16 @@ const Home = async ({ searchParams }: URLProps) => {
         {questions.length > 0 ? (
           questions.map((question) => (
             <QuestionCard
-              key={question.title}
-              createdAt={question.createdAt}
-              views={question.views}
-              upvotes={question.upvotes}
-              downvotes={question.downvotes}
-              answers={question.answers}
-              author={question.author}
-              tags={question.tags}
-              title={question.title}
-              id={question._id}
+              key={question?.id}
+              createdAt={question?.createdAt}
+              // views={10}
+              // upvotes={["1", "2", "3"]}
+              // downvotes={["1", "2", "3"]}
+              // answers={["1", "2", "3"]}
+              author={question?.author}
+              tags={question?.tags}
+              title={question?.title || ""}
+              id={question?.id || ""}
             />
           ))
         ) : (

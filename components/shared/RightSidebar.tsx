@@ -14,12 +14,12 @@ const RightSidebar = async () => {
         <div className="mt-7 flex w-full flex-col justify-between gap-[30px]">
           {hotQuestions.map((question) => (
             <Link
-              key={question._id}
-              href={`/questions/${question._id}`}
+              key={question?.id}
+              href={`/questions/${question?.id}`}
               className="flex cursor-pointer items-center justify-between gap-7"
             >
               <p className="body-medium text-dark500_light700">
-                {question.title}
+                {question?.title}
               </p>
               <Image
                 src="/assets/icons/chevron-right.svg"

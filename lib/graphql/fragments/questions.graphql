@@ -1,0 +1,19 @@
+#import "./tag.graphql"
+
+fragment HomeQuestion on Question {
+  id
+  title
+  createdAt
+  tags {
+    items {
+      tag {
+        ...TagIdByLabel
+      }
+    }
+  }
+  author {
+    name
+    picture
+    clerkId
+  }
+}

@@ -1,0 +1,174 @@
+enum Role {
+  ADMIN
+  USER
+}
+
+type User
+  @searchable
+  @model(subscriptions: { level: off })
+  @auth(
+    rules: [
+      { allow: public, operations: [read] }
+      {
+        allow: owner
+        operations: [create, update, read]
+        provider: oidc
+        identityClaim: "clerkUserId"
+      }
+    ]
+  ) {
+  id: ID!
+    @auth(
+      rules: [
+        {
+          allow: owner
+          operations: [create, read]
+          provider: oidc
+          identityClaim: "clerkUserId"
+        }
+      ]
+    )
+  username: String!
+    @auth(
+      rules: [
+        {
+          allow: owner
+          operations: [create, read]
+          provider: oidc
+          identityClaim: "clerkUserId"
+        }
+      ]
+    )
+  clerkId: ID!
+    @auth(
+      rules: [
+        {
+          allow: owner
+          operations: [create, read]
+          provider: oidc
+          identityClaim: "clerkUserId"
+        }
+      ]
+    )
+  email: AWSEmail!
+    @auth(
+      rules: [
+        {
+          allow: owner
+          operations: [read, create]
+          provider: oidc
+          identityClaim: "clerkUserId"
+        }
+      ]
+    )
+  name: String
+  bio: String
+  picture: String
+  location: String
+  portfolioWebsite: String
+  reputation: Int
+  # saved: [ID]
+  role: Role
+    @default(value: "USER")
+    @auth(
+      rules: [
+        {
+          allow: owner
+          operations: [create, read]
+          provider: oidc
+          identityClaim: "clerkUserId"
+        }
+      ]
+    )
+  questions: [Question] @hasMany
+  # metaInfo: MetaInfo
+}
+
+# export interface IQuestion extends Document {
+#   title: string;
+#   content: string;
+#   tags: Schema.Types.ObjectId[];
+#   views: number;
+#   upvotes: Schema.Types.ObjectId[];
+#   downvotes: Schema.Types.ObjectId[];
+#   author: Schema.Types.ObjectId;
+#   answers: Schema.Types.ObjectId[];
+#   createdAt: Date;
+# }
+
+type Question
+  @searchable
+  @model(subscriptions: { level: off })
+  @auth(
+    rules: [
+      { allow: public, operations: [read] }
+      {
+        allow: owner
+        operations: [create, update, read]
+        provider: oidc
+        identityClaim: "clerkUserId"
+      }
+    ]
+  ) {
+  id: ID!
+    @auth(
+      rules: [
+        {
+          allow: owner
+          operations: [create, read]
+          provider: oidc
+          identityClaim: "clerkUserId"
+        }
+      ]
+    )
+  title: String!
+  content: String!
+  # meta: MetaInfo!
+  tags: [Tag] @manyToMany(relationName: "QuestionTags")
+  author: User @belongsTo
+}
+
+type Tag
+  @searchable
+  @model(subscriptions: { level: off })
+  @auth(
+    rules: [
+      { allow: public, operations: [read] }
+      {
+        allow: owner
+        operations: [create, update, read]
+        provider: oidc
+        identityClaim: "clerkUserId"
+      }
+    ]
+  ) {
+  id: ID!
+  label: String! @index(name: "byLabel")
+  description: String
+  questions: [Question] @manyToMany(relationName: "QuestionTags")
+}
+
+# type MetaInfo @model(subscriptions: { level: off }) {
+#   id: ID!
+#   viewsCount: Int @default(value: "0")
+#   upvotesCount: Int @default(value: "0")
+#   downvotesCount: Int @default(value: "0")
+#   views: [Stat]
+#   upvotes: [Stat]
+#   downvotes: [Stat]
+# }
+
+# enum STAT_TYPE {
+#   VIEW
+#   UPVOTE
+#   DOWNVOTE
+# }
+
+# type Stat @model(subscriptions: { level: off }) {
+#   id: ID!
+#   # questionId: ID @index(name: "byQuestion", fields: ["questionId"])
+#   # question: Question @belongsTo(fields: ["questionId"])
+#   # answer: Answer @belongsTo(fields: ["answerId"])
+#   user: User @hasOne
+#   type: STAT_TYPE!
+# }

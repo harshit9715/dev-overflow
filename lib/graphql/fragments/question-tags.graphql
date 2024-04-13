@@ -1,0 +1,5 @@
+mutation linkQuestionTag($questionId: ID!, $tagId: ID!) {
+  createQuestionTags(input: { questionId: $questionId, tagId: $tagId }) {
+    id
+  }
+}

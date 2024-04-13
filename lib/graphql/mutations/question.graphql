@@ -1,0 +1,7 @@
+#import "../fragments/questions.graphql"
+
+mutation createQuestion($title: String!, $content: String!) {
+  createQuestion(input: { title: $title, content: $content }) {
+    ...HomeQuestion
+  }
+}

@@ -7,10 +7,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const getTimestamp = (then: Date): string => {
+export const getTimestamp = (then: string): string => {
   const now = new Date();
 
-  const diff = now.getTime() - then.getTime();
+  const diff = now.getTime() - new Date(then).getTime();
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);

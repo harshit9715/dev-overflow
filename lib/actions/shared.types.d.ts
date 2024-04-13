@@ -59,6 +59,13 @@ export interface GetQuestionsParams {
   filter?: string;
 }
 
+export interface GetQuestionsParamsDynamo {
+  token?: string;
+  pageSize?: number;
+  searchQuery?: string;
+  filter?: string;
+}
+
 export interface CreateQuestionParams {
   title: string;
   content: string;

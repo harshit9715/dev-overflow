@@ -1,0 +1,14 @@
+mutation createUserInDynamo {
+  createUser(
+    input: {
+      clerkId: "user_2eJRgIQXXmkiIpYXsjdBp8WN3ag"
+      bio: "I can build anything!"
+      email: "harshit9715@gmail.com"
+      name: "Harshit Gupta"
+      picture: "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ2l0aHViL2ltZ18yZUpSZ0ZrQnZ6S1N3YU1OZ1dJZnpscGhNTG0ifQ"
+      username: "harshit9715"
+    }
+  ) {
+    id
+  }
+}
