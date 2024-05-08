@@ -1,5 +1,5 @@
 import GraphiQlExplorer from "@/components/dev/graphiql";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 const GraphiQl = async () => {
   const { getToken } = auth();
   const token = await getToken({ template: "GraphQlOidc" });

@@ -361,7 +361,7 @@ export async function createQuestion(params: CreateQuestionParams) {
     const createQueRes = await client.createQuestion({
       title,
       content,
-      authorId: userId,
+      ownerId: userId,
       slug: slugify(title, true),
     });
     if (createQueRes.createQuestion?.id) {
@@ -383,7 +383,8 @@ export async function createQuestion(params: CreateQuestionParams) {
         )
         // ? Update interaction with created question
         .add(CreateQuestionActionDocument, {
-          userId,
+          ownerId: userId,
+          pointsSelf: POINT_SYSTEM_SELF[InteractionType.AskQuestion],
           questionId: createQueRes.createQuestion!.id,
           actionType: InteractionType.AskQuestion,
         });

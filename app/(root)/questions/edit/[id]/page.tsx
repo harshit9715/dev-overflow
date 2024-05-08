@@ -1,13 +1,14 @@
 import Question from "@/components/forms/Question";
 import { getQuestionById } from "@/lib/actions/question.action";
-import { getUserById } from "@/lib/actions/user.actions";
 import { ParamsProps } from "@/types";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 const EditQuestion = async ({ params }: ParamsProps) => {
-  const { userId } = auth();
-  if (!userId) return null;
-  const mongoUser = await getUserById({ userId });
+  const { sessionClaims } = auth();
+  if (!sessionClaims?.userId) {
+    return redirect("/404");
+  }
   const { question } = await getQuestionById(params.id);
   return (
     <>
@@ -15,7 +16,7 @@ const EditQuestion = async ({ params }: ParamsProps) => {
       <div className="mt-9">
         <Question
           type="Edit"
-          mongoUserId={JSON.stringify(mongoUser._id)}
+          userId={sessionClaims.userId as string}
           questionDetails={JSON.stringify(question)}
         />
       </div>

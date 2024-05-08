@@ -6,7 +6,7 @@ import { saveQuestion } from "@/lib/actions/user.actions";
 import { bigNumberToString } from "@/lib/utils";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useOptimistic } from "react";
+import { useEffect, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 
 interface VoteProps {
@@ -50,7 +50,7 @@ const Votes = ({
   //     hasUpvoted: !state.hasUpvoted,
   //   })
   // );
-
+  const [isPending, startTransition] = useTransition();
   const [optimisticVote, newOptimisticVote] = useOptimistic(
     {
       downvotes,
@@ -75,10 +75,12 @@ const Votes = ({
   }, [itemId, userId, pathname, router, type]);
 
   const handleVote = async (voteType: "upvote" | "downvote") => {
-    if (!userId)
-      return toast("Please sign in", {
+    if (!userId) {
+      toast("Please sign in", {
         description: "You need to sign in to vote",
       });
+      return;
+    }
 
     newOptimisticVote({
       upvotes:
@@ -145,7 +147,8 @@ const Votes = ({
       saveId,
       path: pathname,
     });
-    return toast.info(saveId ? "Removed from saved" : "Question saved", {});
+    toast.info(saveId ? "Removed from saved" : "Question saved", {});
+    return;
   };
   return (
     <div className="flex gap-5">
@@ -161,7 +164,9 @@ const Votes = ({
             width={18}
             height={18}
             className="cursor-pointer"
-            onClick={() => handleVote("upvote")} // upvote
+            onClick={() =>
+              !isPending && startTransition(() => handleVote("upvote"))
+            } // upvote
           />
           <div className="flex-center background-light700_dark400 min-w-[18px] rounded-sm p-1">
             <p className="subtle-medium text-dark400_light900 ">
@@ -181,7 +186,9 @@ const Votes = ({
             height={18}
             // lets animate fill from bottom to top on click
             className="cursor-pointer hover:transform hover:scale-125 transition-transform duration-200 ease-in-out"
-            onClick={() => handleVote("downvote")} // downvote
+            onClick={() =>
+              !isPending && startTransition(() => handleVote("downvote"))
+            } // upvote
           />
           <div className="flex-center background-light700_dark400 min-w-[18px] rounded-sm p-1">
             <p className="subtle-medium text-dark400_light900 ">
@@ -201,7 +208,7 @@ const Votes = ({
           width={18}
           height={18}
           className="cursor-pointer"
-          onClick={() => handleSave()} // save
+          onClick={() => !isPending && startTransition(() => handleSave())}
         />
       )}
     </div>

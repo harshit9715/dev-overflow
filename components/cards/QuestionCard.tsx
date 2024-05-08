@@ -13,12 +13,12 @@ const QuestionCard = ({
   // answers,
   upvoteCount,
   slug,
-  author,
+  owner,
   tags,
   title,
   clerkId,
 }: HomeQuestionFragment & { clerkId?: string }) => {
-  const showActionButtons = clerkId && clerkId === author.id;
+  const showActionButtons = clerkId && clerkId === owner.id;
   return (
     <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
       <div className="flex flex-row items-start justify-between gap-5 sm:flex-row">
@@ -51,11 +51,11 @@ const QuestionCard = ({
 
       <div className="flex-between mt-6 w-full flex-wrap gap-3">
         <Metric
-          imgUrl={author?.picture!}
+          imgUrl={owner?.picture!}
           alt="user"
-          value={author?.name || ""}
+          value={owner?.name || ""}
           title={`- asked ${getTimestamp(createdAt)}`}
-          href={`/profile/${author.id}`}
+          href={`/profile/${owner.id}`}
           isAuthor
           textStyles="body-medium text-dark400_light800"
         />

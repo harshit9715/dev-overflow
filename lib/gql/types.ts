@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { GraphQLClient } from 'graphql-request';
 import * as Dom from 'graphql-request/dist/types.dom';
 import gql from 'graphql-tag';
@@ -21,13 +22,13 @@ export type Scalars = {
 
 export type Answer = {
   __typename?: 'Answer';
-  author: User;
-  authorId: Scalars['ID']['output'];
   content: Scalars['String']['output'];
   createdAt: Scalars['AWSDateTime']['output'];
   downvoteCount?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   interactions?: Maybe<ModelInteractionConnection>;
+  owner: User;
+  ownerId: Scalars['ID']['output'];
   question: Question;
   questionId: Scalars['ID']['output'];
   updatedAt: Scalars['AWSDateTime']['output'];
@@ -44,11 +45,11 @@ export type AnswerInteractionsArgs = {
 };
 
 export type CreateAnswerInput = {
-  authorId: Scalars['ID']['input'];
   content: Scalars['String']['input'];
   createdAt?: InputMaybe<Scalars['AWSDateTime']['input']>;
   downvoteCount?: InputMaybe<Scalars['Int']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
+  ownerId: Scalars['ID']['input'];
   questionId: Scalars['ID']['input'];
   upvoteCount?: InputMaybe<Scalars['Int']['input']>;
   yymm?: InputMaybe<Scalars['String']['input']>;
@@ -69,11 +70,11 @@ export type CreateInteractionInput = {
 
 export type CreateQuestionInput = {
   answerCount?: InputMaybe<Scalars['Int']['input']>;
-  authorId: Scalars['ID']['input'];
   content: Scalars['String']['input'];
   createdAt?: InputMaybe<Scalars['AWSDateTime']['input']>;
   downvoteCount?: InputMaybe<Scalars['Int']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
+  ownerId: Scalars['ID']['input'];
   slug: Scalars['String']['input'];
   title: Scalars['String']['input'];
   upvoteCount?: InputMaybe<Scalars['Int']['input']>;
@@ -167,12 +168,12 @@ export enum InteractionType {
 
 export type ModelAnswerConditionInput = {
   and?: InputMaybe<Array<InputMaybe<ModelAnswerConditionInput>>>;
-  authorId?: InputMaybe<ModelIdInput>;
   content?: InputMaybe<ModelStringInput>;
   createdAt?: InputMaybe<ModelStringInput>;
   downvoteCount?: InputMaybe<ModelIntInput>;
   not?: InputMaybe<ModelAnswerConditionInput>;
   or?: InputMaybe<Array<InputMaybe<ModelAnswerConditionInput>>>;
+  ownerId?: InputMaybe<ModelIdInput>;
   questionId?: InputMaybe<ModelIdInput>;
   updatedAt?: InputMaybe<ModelStringInput>;
   upvoteCount?: InputMaybe<ModelIntInput>;
@@ -187,13 +188,13 @@ export type ModelAnswerConnection = {
 
 export type ModelAnswerFilterInput = {
   and?: InputMaybe<Array<InputMaybe<ModelAnswerFilterInput>>>;
-  authorId?: InputMaybe<ModelIdInput>;
   content?: InputMaybe<ModelStringInput>;
   createdAt?: InputMaybe<ModelStringInput>;
   downvoteCount?: InputMaybe<ModelIntInput>;
   id?: InputMaybe<ModelIdInput>;
   not?: InputMaybe<ModelAnswerFilterInput>;
   or?: InputMaybe<Array<InputMaybe<ModelAnswerFilterInput>>>;
+  ownerId?: InputMaybe<ModelIdInput>;
   questionId?: InputMaybe<ModelIdInput>;
   updatedAt?: InputMaybe<ModelStringInput>;
   upvoteCount?: InputMaybe<ModelIntInput>;
@@ -328,12 +329,12 @@ export type ModelInteractionTypeInput = {
 export type ModelQuestionConditionInput = {
   and?: InputMaybe<Array<InputMaybe<ModelQuestionConditionInput>>>;
   answerCount?: InputMaybe<ModelIntInput>;
-  authorId?: InputMaybe<ModelIdInput>;
   content?: InputMaybe<ModelStringInput>;
   createdAt?: InputMaybe<ModelStringInput>;
   downvoteCount?: InputMaybe<ModelIntInput>;
   not?: InputMaybe<ModelQuestionConditionInput>;
   or?: InputMaybe<Array<InputMaybe<ModelQuestionConditionInput>>>;
+  ownerId?: InputMaybe<ModelIdInput>;
   slug?: InputMaybe<ModelStringInput>;
   title?: InputMaybe<ModelStringInput>;
   updatedAt?: InputMaybe<ModelStringInput>;
@@ -351,13 +352,13 @@ export type ModelQuestionConnection = {
 export type ModelQuestionFilterInput = {
   and?: InputMaybe<Array<InputMaybe<ModelQuestionFilterInput>>>;
   answerCount?: InputMaybe<ModelIntInput>;
-  authorId?: InputMaybe<ModelIdInput>;
   content?: InputMaybe<ModelStringInput>;
   createdAt?: InputMaybe<ModelStringInput>;
   downvoteCount?: InputMaybe<ModelIntInput>;
   id?: InputMaybe<ModelIdInput>;
   not?: InputMaybe<ModelQuestionFilterInput>;
   or?: InputMaybe<Array<InputMaybe<ModelQuestionFilterInput>>>;
+  ownerId?: InputMaybe<ModelIdInput>;
   slug?: InputMaybe<ModelStringInput>;
   title?: InputMaybe<ModelStringInput>;
   updatedAt?: InputMaybe<ModelStringInput>;
@@ -368,7 +369,6 @@ export type ModelQuestionFilterInput = {
 
 export type ModelQuestionTagsConditionInput = {
   and?: InputMaybe<Array<InputMaybe<ModelQuestionTagsConditionInput>>>;
-  authorId?: InputMaybe<ModelStringInput>;
   createdAt?: InputMaybe<ModelStringInput>;
   not?: InputMaybe<ModelQuestionTagsConditionInput>;
   or?: InputMaybe<Array<InputMaybe<ModelQuestionTagsConditionInput>>>;
@@ -386,7 +386,6 @@ export type ModelQuestionTagsConnection = {
 
 export type ModelQuestionTagsFilterInput = {
   and?: InputMaybe<Array<InputMaybe<ModelQuestionTagsFilterInput>>>;
-  authorId?: InputMaybe<ModelStringInput>;
   createdAt?: InputMaybe<ModelStringInput>;
   id?: InputMaybe<ModelIdInput>;
   not?: InputMaybe<ModelQuestionTagsFilterInput>;
@@ -506,7 +505,6 @@ export type ModelSubscriptionInteractionFilterInput = {
 
 export type ModelSubscriptionQuestionTagsFilterInput = {
   and?: InputMaybe<Array<InputMaybe<ModelSubscriptionQuestionTagsFilterInput>>>;
-  authorId?: InputMaybe<ModelStringInput>;
   createdAt?: InputMaybe<ModelSubscriptionStringInput>;
   id?: InputMaybe<ModelSubscriptionIdInput>;
   or?: InputMaybe<Array<InputMaybe<ModelSubscriptionQuestionTagsFilterInput>>>;
@@ -742,7 +740,7 @@ export type MutationUpdateUserArgs = {
 
 export type Query = {
   __typename?: 'Query';
-  answersByAuthorIdAndCreatedAt?: Maybe<ModelAnswerConnection>;
+  answersByOwnerIdAndCreatedAt?: Maybe<ModelAnswerConnection>;
   answersByQuestionIdAndCreatedAt?: Maybe<ModelAnswerConnection>;
   answersByQuestionIdAndUpvoteCount?: Maybe<ModelAnswerConnection>;
   answersByYymmAndCreatedAt?: Maybe<ModelAnswerConnection>;
@@ -765,7 +763,7 @@ export type Query = {
   listUsers?: Maybe<ModelUserConnection>;
   questionTagsByQuestionId?: Maybe<ModelQuestionTagsConnection>;
   questionTagsByTagId?: Maybe<ModelQuestionTagsConnection>;
-  questionsByAuthorIdAndCreatedAt?: Maybe<ModelQuestionConnection>;
+  questionsByOwnerIdAndCreatedAt?: Maybe<ModelQuestionConnection>;
   questionsBySlug?: Maybe<ModelQuestionConnection>;
   questionsByYymmAndCreatedAt?: Maybe<ModelQuestionConnection>;
   searchAnswers?: Maybe<SearchableAnswerConnection>;
@@ -780,12 +778,12 @@ export type Query = {
 };
 
 
-export type QueryAnswersByAuthorIdAndCreatedAtArgs = {
-  authorId: Scalars['ID']['input'];
+export type QueryAnswersByOwnerIdAndCreatedAtArgs = {
   createdAt?: InputMaybe<ModelStringKeyConditionInput>;
   filter?: InputMaybe<ModelAnswerFilterInput>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   nextToken?: InputMaybe<Scalars['String']['input']>;
+  ownerId: Scalars['ID']['input'];
   sortDirection?: InputMaybe<ModelSortDirection>;
 };
 
@@ -960,12 +958,12 @@ export type QueryQuestionTagsByTagIdArgs = {
 };
 
 
-export type QueryQuestionsByAuthorIdAndCreatedAtArgs = {
-  authorId: Scalars['ID']['input'];
+export type QueryQuestionsByOwnerIdAndCreatedAtArgs = {
   createdAt?: InputMaybe<ModelStringKeyConditionInput>;
   filter?: InputMaybe<ModelQuestionFilterInput>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   nextToken?: InputMaybe<Scalars['String']['input']>;
+  ownerId: Scalars['ID']['input'];
   sortDirection?: InputMaybe<ModelSortDirection>;
 };
 
@@ -1080,13 +1078,13 @@ export type Question = {
   __typename?: 'Question';
   answerCount?: Maybe<Scalars['Int']['output']>;
   answers?: Maybe<ModelAnswerConnection>;
-  author: User;
-  authorId: Scalars['ID']['output'];
   content: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['AWSDateTime']['output']>;
   downvoteCount?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   interactions?: Maybe<ModelInteractionConnection>;
+  owner: User;
+  ownerId: Scalars['ID']['output'];
   slug: Scalars['String']['output'];
   tags?: Maybe<ModelQuestionTagsConnection>;
   title: Scalars['String']['output'];
@@ -1123,7 +1121,6 @@ export type QuestionTagsArgs = {
 
 export type QuestionTags = {
   __typename?: 'QuestionTags';
-  authorId?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['AWSDateTime']['output'];
   id: Scalars['ID']['output'];
   ownerId?: Maybe<Scalars['String']['output']>;
@@ -1173,11 +1170,11 @@ export enum SearchableAggregateType {
 }
 
 export enum SearchableAnswerAggregateField {
-  AuthorId = 'authorId',
   Content = 'content',
   CreatedAt = 'createdAt',
   DownvoteCount = 'downvoteCount',
   Id = 'id',
+  OwnerId = 'ownerId',
   QuestionId = 'questionId',
   UpdatedAt = 'updatedAt',
   UpvoteCount = 'upvoteCount',
@@ -1200,13 +1197,13 @@ export type SearchableAnswerConnection = {
 
 export type SearchableAnswerFilterInput = {
   and?: InputMaybe<Array<InputMaybe<SearchableAnswerFilterInput>>>;
-  authorId?: InputMaybe<SearchableIdFilterInput>;
   content?: InputMaybe<SearchableStringFilterInput>;
   createdAt?: InputMaybe<SearchableStringFilterInput>;
   downvoteCount?: InputMaybe<SearchableIntFilterInput>;
   id?: InputMaybe<SearchableIdFilterInput>;
   not?: InputMaybe<SearchableAnswerFilterInput>;
   or?: InputMaybe<Array<InputMaybe<SearchableAnswerFilterInput>>>;
+  ownerId?: InputMaybe<SearchableIdFilterInput>;
   questionId?: InputMaybe<SearchableIdFilterInput>;
   updatedAt?: InputMaybe<SearchableStringFilterInput>;
   upvoteCount?: InputMaybe<SearchableIntFilterInput>;
@@ -1219,11 +1216,11 @@ export type SearchableAnswerSortInput = {
 };
 
 export enum SearchableAnswerSortableFields {
-  AuthorId = 'authorId',
   Content = 'content',
   CreatedAt = 'createdAt',
   DownvoteCount = 'downvoteCount',
   Id = 'id',
+  OwnerId = 'ownerId',
   QuestionId = 'questionId',
   UpdatedAt = 'updatedAt',
   UpvoteCount = 'upvoteCount',
@@ -1274,11 +1271,11 @@ export type SearchableIntFilterInput = {
 
 export enum SearchableQuestionAggregateField {
   AnswerCount = 'answerCount',
-  AuthorId = 'authorId',
   Content = 'content',
   CreatedAt = 'createdAt',
   DownvoteCount = 'downvoteCount',
   Id = 'id',
+  OwnerId = 'ownerId',
   Slug = 'slug',
   Title = 'title',
   UpdatedAt = 'updatedAt',
@@ -1304,13 +1301,13 @@ export type SearchableQuestionConnection = {
 export type SearchableQuestionFilterInput = {
   and?: InputMaybe<Array<InputMaybe<SearchableQuestionFilterInput>>>;
   answerCount?: InputMaybe<SearchableIntFilterInput>;
-  authorId?: InputMaybe<SearchableIdFilterInput>;
   content?: InputMaybe<SearchableStringFilterInput>;
   createdAt?: InputMaybe<SearchableStringFilterInput>;
   downvoteCount?: InputMaybe<SearchableIntFilterInput>;
   id?: InputMaybe<SearchableIdFilterInput>;
   not?: InputMaybe<SearchableQuestionFilterInput>;
   or?: InputMaybe<Array<InputMaybe<SearchableQuestionFilterInput>>>;
+  ownerId?: InputMaybe<SearchableIdFilterInput>;
   slug?: InputMaybe<SearchableStringFilterInput>;
   title?: InputMaybe<SearchableStringFilterInput>;
   updatedAt?: InputMaybe<SearchableStringFilterInput>;
@@ -1326,11 +1323,11 @@ export type SearchableQuestionSortInput = {
 
 export enum SearchableQuestionSortableFields {
   AnswerCount = 'answerCount',
-  AuthorId = 'authorId',
   Content = 'content',
   CreatedAt = 'createdAt',
   DownvoteCount = 'downvoteCount',
   Id = 'id',
+  OwnerId = 'ownerId',
   Slug = 'slug',
   Title = 'title',
   UpdatedAt = 'updatedAt',
@@ -1506,7 +1503,6 @@ export type SubscriptionOnCreateInteractionArgs = {
 
 
 export type SubscriptionOnCreateQuestionTagsArgs = {
-  authorId?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<ModelSubscriptionQuestionTagsFilterInput>;
   ownerId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1519,7 +1515,6 @@ export type SubscriptionOnDeleteInteractionArgs = {
 
 
 export type SubscriptionOnDeleteQuestionTagsArgs = {
-  authorId?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<ModelSubscriptionQuestionTagsFilterInput>;
   ownerId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1532,7 +1527,6 @@ export type SubscriptionOnUpdateInteractionArgs = {
 
 
 export type SubscriptionOnUpdateQuestionTagsArgs = {
-  authorId?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<ModelSubscriptionQuestionTagsFilterInput>;
   ownerId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1560,11 +1554,11 @@ export type TagQuestionsArgs = {
 };
 
 export type UpdateAnswerInput = {
-  authorId?: InputMaybe<Scalars['ID']['input']>;
   content?: InputMaybe<Scalars['String']['input']>;
   createdAt?: InputMaybe<Scalars['AWSDateTime']['input']>;
   downvoteCount?: InputMaybe<Scalars['Int']['input']>;
   id: Scalars['ID']['input'];
+  ownerId?: InputMaybe<Scalars['ID']['input']>;
   questionId?: InputMaybe<Scalars['ID']['input']>;
   upvoteCount?: InputMaybe<Scalars['Int']['input']>;
   yymm?: InputMaybe<Scalars['String']['input']>;
@@ -1585,11 +1579,11 @@ export type UpdateInteractionInput = {
 
 export type UpdateQuestionInput = {
   answerCount?: InputMaybe<Scalars['Int']['input']>;
-  authorId?: InputMaybe<Scalars['ID']['input']>;
   content?: InputMaybe<Scalars['String']['input']>;
   createdAt?: InputMaybe<Scalars['AWSDateTime']['input']>;
   downvoteCount?: InputMaybe<Scalars['Int']['input']>;
   id: Scalars['ID']['input'];
+  ownerId?: InputMaybe<Scalars['ID']['input']>;
   slug?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
   upvoteCount?: InputMaybe<Scalars['Int']['input']>;
@@ -1687,7 +1681,7 @@ export type UserTagsArgs = {
   sortDirection?: InputMaybe<ModelSortDirection>;
 };
 
-export type HomeQuestionFragment = { __typename?: 'Question', id: string, slug: string, title: string, createdAt?: any | null, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string } } | null> } | null, author: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null } };
+export type HomeQuestionFragment = { __typename?: 'Question', id: string, slug: string, title: string, createdAt?: any | null, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string } } | null> } | null, owner: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null } };
 
 export type TagIdByLabelFragment = { __typename?: 'Tag', id: string, label: string };
 
@@ -1699,7 +1693,7 @@ export type UserCardFragment = { __typename?: 'User', id: string, name?: string 
 
 export type PostNewAnswerMutationVariables = Exact<{
   content: Scalars['String']['input'];
-  authorId: Scalars['ID']['input'];
+  ownerId: Scalars['ID']['input'];
   questionId: Scalars['ID']['input'];
 }>;
 
@@ -1768,12 +1762,12 @@ export type LinkQuestionTagMutation = { __typename?: 'Mutation', createQuestionT
 export type CreateQuestionMutationVariables = Exact<{
   title: Scalars['String']['input'];
   content: Scalars['String']['input'];
-  authorId: Scalars['ID']['input'];
+  ownerId: Scalars['ID']['input'];
   slug: Scalars['String']['input'];
 }>;
 
 
-export type CreateQuestionMutation = { __typename?: 'Mutation', createQuestion?: { __typename?: 'Question', id: string, slug: string, title: string, createdAt?: any | null, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string } } | null> } | null, author: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null } } | null };
+export type CreateQuestionMutation = { __typename?: 'Mutation', createQuestion?: { __typename?: 'Question', id: string, slug: string, title: string, createdAt?: any | null, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string } } | null> } | null, owner: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null } } | null };
 
 export type ViewQuestionMutationVariables = Exact<{
   questionId: Scalars['ID']['input'];
@@ -1828,6 +1822,18 @@ export type NewDevFlowUserMutationVariables = Exact<{
 
 export type NewDevFlowUserMutation = { __typename?: 'Mutation', createUser?: { __typename?: 'User', id: string } | null };
 
+export type UpdateProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  picture?: InputMaybe<Scalars['String']['input']>;
+  bio?: InputMaybe<Scalars['String']['input']>;
+  location?: InputMaybe<Scalars['String']['input']>;
+  portfolioWebsite?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type UpdateProfileMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', id: string } | null };
+
 export type GetAnswersForQuestionQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
@@ -1835,7 +1841,7 @@ export type GetAnswersForQuestionQueryVariables = Exact<{
 }>;
 
 
-export type GetAnswersForQuestionQuery = { __typename?: 'Query', searchAnswers?: { __typename?: 'SearchableAnswerConnection', total?: number | null, items: Array<{ __typename?: 'Answer', id: string, content: string, upvoteCount?: number | null, downvoteCount?: number | null, createdAt: any, author: { __typename?: 'User', id: string, name?: string | null, picture?: string | null }, interactions?: { __typename?: 'ModelInteractionConnection', items: Array<{ __typename?: 'Interaction', id: string, type: InteractionType } | null> } | null } | null> } | null };
+export type GetAnswersForQuestionQuery = { __typename?: 'Query', searchAnswers?: { __typename?: 'SearchableAnswerConnection', total?: number | null, items: Array<{ __typename?: 'Answer', id: string, content: string, upvoteCount?: number | null, downvoteCount?: number | null, createdAt: any, owner: { __typename?: 'User', id: string, name?: string | null, picture?: string | null }, interactions?: { __typename?: 'ModelInteractionConnection', items: Array<{ __typename?: 'Interaction', id: string, type: InteractionType } | null> } | null } | null> } | null };
 
 export type ListQuestionActionsForUserQueryVariables = Exact<{
   ownerId: Scalars['ID']['input'];
@@ -1868,7 +1874,7 @@ export type HomeQuestionsQueryVariables = Exact<{
 }>;
 
 
-export type HomeQuestionsQuery = { __typename?: 'Query', listQuestions?: { __typename?: 'ModelQuestionConnection', nextToken?: string | null, items: Array<{ __typename?: 'Question', id: string, slug: string, title: string, createdAt?: any | null, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string } } | null> } | null, author: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null } } | null> } | null };
+export type HomeQuestionsQuery = { __typename?: 'Query', listQuestions?: { __typename?: 'ModelQuestionConnection', nextToken?: string | null, items: Array<{ __typename?: 'Question', id: string, slug: string, title: string, createdAt?: any | null, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string } } | null> } | null, owner: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null } } | null> } | null };
 
 export type GetTopQuestionsQueryVariables = Exact<{
   userId?: InputMaybe<Scalars['ID']['input']>;
@@ -1891,7 +1897,7 @@ export type GetQuestionDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetQuestionDetailsQuery = { __typename?: 'Query', getQuestion?: { __typename?: 'Question', title: string, content: string, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, createdAt?: any | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', label: string } } | null> } | null, author: { __typename?: 'User', id: string, name?: string | null, picture?: string | null } } | null, interactionsByQuestionIdAndOwnerId?: { __typename?: 'ModelInteractionConnection', items: Array<{ __typename?: 'Interaction', id: string, type: InteractionType } | null> } | null };
+export type GetQuestionDetailsQuery = { __typename?: 'Query', getQuestion?: { __typename?: 'Question', title: string, content: string, upvoteCount?: number | null, downvoteCount?: number | null, viewCount?: number | null, createdAt?: any | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', label: string } } | null> } | null, owner: { __typename?: 'User', id: string, name?: string | null, picture?: string | null } } | null, interactionsByQuestionIdAndOwnerId?: { __typename?: 'ModelInteractionConnection', items: Array<{ __typename?: 'Interaction', id: string, type: InteractionType } | null> } | null };
 
 export type GetTagIdByLabelQueryVariables = Exact<{
   label: Scalars['String']['input'];
@@ -1918,13 +1924,6 @@ export type GetAllTagsQueryVariables = Exact<{
 
 export type GetAllTagsQuery = { __typename?: 'Query', searchTags?: { __typename?: 'SearchableTagConnection', total?: number | null, items: Array<{ __typename?: 'Tag', id: string, label: string, questionCount: number, description?: string | null } | null> } | null };
 
-export type GetUserByClerkIdQueryVariables = Exact<{
-  clerkId: Scalars['ID']['input'];
-}>;
-
-
-export type GetUserByClerkIdQuery = { __typename?: 'Query', usersByClerkId?: { __typename?: 'ModelUserConnection', items: Array<{ __typename?: 'User', id: string } | null> } | null };
-
 export type GetCommunityMembersQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1941,14 +1940,14 @@ export type SavedQuestionsQueryVariables = Exact<{
 }>;
 
 
-export type SavedQuestionsQuery = { __typename?: 'Query', interactionsByOwnerIdAndCreatedAt?: { __typename?: 'ModelInteractionConnection', items: Array<{ __typename?: 'Interaction', id: string, question?: { __typename?: 'Question', title: string, slug: string, id: string, createdAt?: any | null, viewCount?: number | null, upvoteCount?: number | null, downvoteCount?: number | null, author: { __typename?: 'User', id: string, username: string, picture?: string | null }, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string, questionCount: number, description?: string | null } } | null> } | null } | null } | null> } | null };
+export type SavedQuestionsQuery = { __typename?: 'Query', interactionsByOwnerIdAndCreatedAt?: { __typename?: 'ModelInteractionConnection', items: Array<{ __typename?: 'Interaction', id: string, question?: { __typename?: 'Question', title: string, slug: string, id: string, createdAt?: any | null, viewCount?: number | null, upvoteCount?: number | null, downvoteCount?: number | null, owner: { __typename?: 'User', id: string, username: string, picture?: string | null }, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string, questionCount: number, description?: string | null } } | null> } | null } | null } | null> } | null };
 
 export type GetUserProfileQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
 }>;
 
 
-export type GetUserProfileQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null, portfolioWebsite?: string | null, bio?: string | null, createdAt?: any | null, location?: string | null, clerkId: string, askedQuestions?: { __typename?: 'ModelQuestionConnection', items: Array<{ __typename?: 'Question', id: string, title: string, slug: string, createdAt?: any | null, viewCount?: number | null, upvoteCount?: number | null, downvoteCount?: number | null, answerCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string, questionCount: number, description?: string | null } } | null> } | null } | null> } | null, answersGiven?: { __typename?: 'ModelAnswerConnection', items: Array<{ __typename?: 'Answer', id: string, question: { __typename?: 'Question', id: string, title: string, slug: string, createdAt?: any | null, viewCount?: number | null, upvoteCount?: number | null, downvoteCount?: number | null, author: { __typename?: 'User', id: string, username: string, picture?: string | null }, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string, questionCount: number, description?: string | null } } | null> } | null } } | null> } | null } | null };
+export type GetUserProfileQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', id: string, name?: string | null, username: string, picture?: string | null, portfolioWebsite?: string | null, bio?: string | null, createdAt?: any | null, location?: string | null, clerkId: string, askedQuestions?: { __typename?: 'ModelQuestionConnection', items: Array<{ __typename?: 'Question', id: string, title: string, slug: string, createdAt?: any | null, viewCount?: number | null, upvoteCount?: number | null, downvoteCount?: number | null, answerCount?: number | null, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string, questionCount: number, description?: string | null } } | null> } | null } | null> } | null, answersGiven?: { __typename?: 'ModelAnswerConnection', items: Array<{ __typename?: 'Answer', id: string, question: { __typename?: 'Question', id: string, title: string, slug: string, createdAt?: any | null, viewCount?: number | null, upvoteCount?: number | null, downvoteCount?: number | null, owner: { __typename?: 'User', id: string, username: string, picture?: string | null }, tags?: { __typename?: 'ModelQuestionTagsConnection', items: Array<{ __typename?: 'QuestionTags', tag: { __typename?: 'Tag', id: string, label: string, questionCount: number, description?: string | null } } | null> } | null } } | null> } | null } | null };
 
 export const TagIdByLabelFragmentDoc = gql`
     fragment TagIdByLabel on Tag {
@@ -1980,7 +1979,7 @@ export const HomeQuestionFragmentDoc = gql`
       }
     }
   }
-  author {
+  owner {
     ...UserMinFragment
   }
 }
@@ -2006,9 +2005,9 @@ export const UserCardFragmentDoc = gql`
     ${UserMinFragmentFragmentDoc}
 ${TagIdByLabelFragmentDoc}`;
 export const PostNewAnswerDocument = gql`
-    mutation postNewAnswer($content: String!, $authorId: ID!, $questionId: ID!) {
+    mutation postNewAnswer($content: String!, $ownerId: ID!, $questionId: ID!) {
   createAnswer(
-    input: {content: $content, authorId: $authorId, questionId: $questionId}
+    input: {content: $content, ownerId: $ownerId, questionId: $questionId}
   ) {
     id
   }
@@ -2078,9 +2077,9 @@ export const LinkQuestionTagDocument = gql`
 }
     `;
 export const CreateQuestionDocument = gql`
-    mutation createQuestion($title: String!, $content: String!, $authorId: ID!, $slug: String!) {
+    mutation createQuestion($title: String!, $content: String!, $ownerId: ID!, $slug: String!) {
   createQuestion(
-    input: {title: $title, content: $content, authorId: $authorId, slug: $slug}
+    input: {title: $title, content: $content, ownerId: $ownerId, slug: $slug}
   ) {
     ...HomeQuestion
   }
@@ -2138,6 +2137,15 @@ export const NewDevFlowUserDocument = gql`
   }
 }
     `;
+export const UpdateProfileDocument = gql`
+    mutation updateProfile($id: ID!, $name: String, $picture: String, $bio: String, $location: String, $portfolioWebsite: String) {
+  updateUser(
+    input: {id: $id, name: $name, picture: $picture, bio: $bio, location: $location, portfolioWebsite: $portfolioWebsite}
+  ) {
+    id
+  }
+}
+    `;
 export const GetAnswersForQuestionDocument = gql`
     query getAnswersForQuestion($limit: Int, $skip: Int, $questionId: ID!) {
   searchAnswers(
@@ -2152,7 +2160,7 @@ export const GetAnswersForQuestionDocument = gql`
       upvoteCount
       downvoteCount
       createdAt
-      author {
+      owner {
         id
         name
         picture
@@ -2219,7 +2227,7 @@ export const GetTopQuestionsDocument = gql`
     query getTopQuestions($userId: ID, $limit: Int) {
   searchQuestions(
     limit: $limit
-    filter: {authorId: {ne: $userId}}
+    filter: {ownerId: {ne: $userId}}
     sort: {field: upvoteCount, direction: desc}
   ) {
     items {
@@ -2254,7 +2262,7 @@ export const GetQuestionDetailsDocument = gql`
         }
       }
     }
-    author {
+    owner {
       id
       name
       picture
@@ -2307,15 +2315,6 @@ export const GetAllTagsDocument = gql`
   }
 }
     ${TagCardFragmentDoc}`;
-export const GetUserByClerkIdDocument = gql`
-    query getUserByClerkId($clerkId: ID!) {
-  usersByClerkId(clerkId: $clerkId) {
-    items {
-      id
-    }
-  }
-}
-    `;
 export const GetCommunityMembersDocument = gql`
     query getCommunityMembers($skip: Int, $limit: Int, $sortField: SearchableUserSortableFields, $sortDir: SearchableSortDirection, $filter: SearchableUserFilterInput) {
   searchUsers(
@@ -2347,7 +2346,7 @@ export const SavedQuestionsDocument = gql`
         viewCount
         upvoteCount
         downvoteCount
-        author {
+        owner {
           id
           username
           picture
@@ -2406,7 +2405,7 @@ export const GetUserProfileDocument = gql`
           viewCount
           upvoteCount
           downvoteCount
-          author {
+          owner {
             id
             username
             picture
@@ -2474,6 +2473,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     newDevFlowUser(variables: NewDevFlowUserMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<NewDevFlowUserMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<NewDevFlowUserMutation>(NewDevFlowUserDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'newDevFlowUser', 'mutation');
     },
+    updateProfile(variables: UpdateProfileMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<UpdateProfileMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<UpdateProfileMutation>(UpdateProfileDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'updateProfile', 'mutation');
+    },
     getAnswersForQuestion(variables: GetAnswersForQuestionQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetAnswersForQuestionQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAnswersForQuestionQuery>(GetAnswersForQuestionDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAnswersForQuestion', 'query');
     },
@@ -2506,9 +2508,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     getAllTags(variables?: GetAllTagsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetAllTagsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAllTagsQuery>(GetAllTagsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAllTags', 'query');
-    },
-    getUserByClerkId(variables: GetUserByClerkIdQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetUserByClerkIdQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetUserByClerkIdQuery>(GetUserByClerkIdDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getUserByClerkId', 'query');
     },
     getCommunityMembers(variables?: GetCommunityMembersQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetCommunityMembersQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetCommunityMembersQuery>(GetCommunityMembersDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getCommunityMembers', 'query');

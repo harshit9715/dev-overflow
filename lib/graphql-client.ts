@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { GraphQLClient } from "graphql-request";
 import { getSdk } from "./gql/types";
 

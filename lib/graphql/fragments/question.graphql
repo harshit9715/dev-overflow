@@ -16,7 +16,7 @@ fragment HomeQuestion on Question {
       }
     }
   }
-  author {
+  owner {
     ...UserMinFragment
   }
 }

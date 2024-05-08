@@ -4,12 +4,9 @@ import NoResult from "@/components/shared/NoResult";
 import Pagination from "@/components/shared/Pagination";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { QuestionFilters } from "@/constants/filters";
-import {
-  getAllSavedQuestions,
-  getUserIdByClerkId,
-} from "@/lib/actions/user.actions";
+import { getAllSavedQuestions } from "@/lib/actions/user.actions";
 import { URLProps } from "@/types";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -22,16 +19,13 @@ export const metadata: Metadata = {
 };
 
 const Collections = async ({ searchParams }: URLProps) => {
-  const { userId: clerkId } = auth();
-  if (!clerkId) {
-    redirect("/sign-in");
-  }
-  const userId = await getUserIdByClerkId({ userId: clerkId });
-  if (!userId) {
+  const { sessionClaims } = auth();
+
+  if (!sessionClaims?.userId) {
     redirect("/sign-in");
   }
   const { savedQuestions } = await getAllSavedQuestions({
-    userId,
+    userId: sessionClaims.userId as string,
     searchQuery: searchParams.q,
     filter: searchParams.filter,
     page: searchParams.page ? +searchParams.page : 1,
@@ -65,7 +59,7 @@ const Collections = async ({ searchParams }: URLProps) => {
                   downvoteCount={question.downvoteCount}
                   upvoteCount={question.upvoteCount}
                   slug={question.slug}
-                  author={question.author}
+                  owner={question.owner}
                   tags={question.tags}
                   title={question.title}
                   id={question.id}

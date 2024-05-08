@@ -32,7 +32,7 @@ const Tags = async ({ searchParams }: URLProps) => {
       </div>
       <section className="mt-12 flex flex-wrap justify-center gap-4">
         {tags.length > 0 ? (
-          tags.map((tag) => <TagCard key={tag._id} tag={tag} />)
+          tags.map((tag) => tag && <TagCard key={tag.id} tag={tag} />)
         ) : (
           <NoResult
             link="/sign-up"
@@ -45,7 +45,7 @@ const Tags = async ({ searchParams }: URLProps) => {
       <div className="mt-12">
         <Pagination
           pageNumber={searchParams.page ? +searchParams.page : 1}
-          isNext={isNext}
+          isNext={"isNext"}
         />
       </div>
     </>

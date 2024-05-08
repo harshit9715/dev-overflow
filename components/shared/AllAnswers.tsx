@@ -45,19 +45,19 @@ const AllAnswers = async ({
                 {/* SPAN ID */}
                 <div className="mb-8 flex flex-col-reverse justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
                   <Link
-                    href={`/profile/${answer.author?.id}`}
+                    href={`/profile/${answer.owner?.id}`}
                     className="flex flex-1 items-start gap-1 sm:items-center"
                   >
                     <Image
-                      src={answer.author?.picture || "/assets/icons/user.svg"}
-                      alt={answer.author?.name || "User"}
+                      src={answer.owner?.picture || "/assets/icons/user.svg"}
+                      alt={answer.owner?.name || "User"}
                       width={18}
                       height={18}
                       className="rounded-full object-cover max-sm:mt-0.5"
                     />
                     <div className="flex flex-col sm:flex-row sm:items-center">
                       <p className="body-semibold text-dark300_light700">
-                        {answer.author?.name}
+                        {answer.owner?.name}
                       </p>
                       <p className="small-regular text-light400_light500 ml-1 mt-0.5 line-clamp-1">
                         answered {getTimestamp(answer.createdAt)}

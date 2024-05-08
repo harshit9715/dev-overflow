@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { HomePageFilters } from "@/constants/filters";
 import { getQuestions } from "@/lib/actions/question.action";
 import { URLProps } from "@/types";
-import { auth } from "@clerk/nextjs";
 import { Metadata } from "next";
 import Link from "next/link";
 
@@ -21,9 +20,8 @@ export const metadata: Metadata = {
 };
 
 const Home = async ({ searchParams }: URLProps) => {
-  const { getToken, user } = auth();
-  user?.externalId;
-  const token = await getToken({ template: "GraphQlOidc" });
+  // const { getToken, sessionClaims } = auth();
+  // const token = await getToken({ template: "GraphQlOidc" });
   // console.log(token);
   // let questions = [];
   // let isNext = false;
@@ -91,7 +89,7 @@ const Home = async ({ searchParams }: URLProps) => {
                   upvoteCount={question.upvoteCount || 0}
                   downvoteCount={question.downvoteCount || 0}
                   // answers={["1", "2", "3"]}
-                  author={question?.author}
+                  owner={question?.owner}
                   tags={question?.tags}
                   title={question?.title || ""}
                   id={question?.slug || ""}

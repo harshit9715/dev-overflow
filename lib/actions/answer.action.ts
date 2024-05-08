@@ -21,7 +21,7 @@ export const createAnswer = async (params: CreateAnswerParams) => {
     const client = await getGraphQLClient();
     const { author, content, path, question } = params;
     const answer = await client.postNewAnswer({
-      authorId: author,
+      ownerId: author,
       content,
       questionId: question,
     });

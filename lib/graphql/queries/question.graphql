@@ -16,7 +16,7 @@ query HomeQuestions(
 query getTopQuestions($userId: ID, $limit: Int) {
   searchQuestions(
     limit: $limit
-    filter: { authorId: { ne: $userId } }
+    filter: { ownerId: { ne: $userId } }
     sort: { field: upvoteCount, direction: desc }
   ) {
     items {
@@ -49,7 +49,7 @@ query getQuestionDetails($questionId: ID!, $ownerId: ID!) {
         }
       }
     }
-    author {
+    owner {
       id
       name
       picture

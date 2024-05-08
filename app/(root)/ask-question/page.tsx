@@ -1,18 +1,11 @@
 import Question from "@/components/forms/Question";
-import { getUserIdByClerkId } from "@/lib/actions/user.actions";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 const AskQuestion = async () => {
-  const { userId: clerkId } = auth();
+  const { sessionClaims } = auth();
 
-  if (!clerkId) {
-    redirect("/sign-in");
-  }
-
-  const userId = await getUserIdByClerkId({ userId: clerkId });
-
-  if (!userId) {
+  if (!sessionClaims?.userId) {
     redirect("/sign-in");
   }
 
@@ -20,7 +13,7 @@ const AskQuestion = async () => {
     <div>
       <h1 className="h1-bold text-dark100_light900">Ask a question</h1>
       <div>
-        <Question userId={userId} />
+        <Question userId={sessionClaims.userId as string} />
       </div>
     </div>
   );

@@ -19,19 +19,13 @@ import {
   UpdateUserParams,
 } from "./shared.types";
 
-export async function getUserIdByClerkId(params: GetUserByIdParams) {
-  const userQuery = await getGraphQLClient().then((client) =>
-    client.getUserByClerkId({ clerkId: params.userId })
-  );
-  return userQuery.usersByClerkId?.items[0]?.id;
-}
-
 export async function updateUser(params: UpdateUserParams) {
   try {
-    connectDatabase();
-    const { clerkId, updateData, path } = params;
-    const user = await User.findOneAndUpdate({ clerkId }, updateData, {
-      new: true,
+    const client = await getGraphQLClient();
+    const { userId, updateData, path } = params;
+    const user = await client.updateProfile({
+      id: userId,
+      ...updateData,
     });
     revalidatePath(path);
     return user as IUser;

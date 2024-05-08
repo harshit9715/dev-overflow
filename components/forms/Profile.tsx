@@ -21,11 +21,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 interface Params {
-  clerkId: string;
   userObjString: string;
 }
 
-const ProfileForm = ({ clerkId, userObjString }: Params) => {
+const ProfileForm = ({ userObjString }: Params) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const user = JSON.parse(userObjString);
   const router = useRouter();
@@ -46,7 +45,7 @@ const ProfileForm = ({ clerkId, userObjString }: Params) => {
     try {
       // updateUser
       const updateProfilePromise = updateUser({
-        clerkId,
+        userId: user.id,
         updateData: values,
         path: pathname,
       });

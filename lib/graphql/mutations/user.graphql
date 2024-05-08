@@ -20,3 +20,25 @@ mutation newDevFlowUser(
     id
   }
 }
+
+mutation updateProfile(
+  $id: ID!
+  $name: String
+  $picture: String
+  $bio: String
+  $location: String
+  $portfolioWebsite: String
+) {
+  updateUser(
+    input: {
+      id: $id
+      name: $name
+      picture: $picture
+      bio: $bio
+      location: $location
+      portfolioWebsite: $portfolioWebsite
+    }
+  ) {
+    id
+  }
+}

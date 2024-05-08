@@ -5,25 +5,23 @@ import ParseHTML from "@/components/shared/ParseHTML";
 import RenderTag from "@/components/shared/RenderTag";
 import Votes from "@/components/shared/Votes";
 import { getQuestionBySlug } from "@/lib/actions/question.action";
-import { getUserIdByClerkId } from "@/lib/actions/user.actions";
 import { InteractionType } from "@/lib/gql/types";
 import { bigNumberToString, getTimestamp } from "@/lib/utils";
 import { URLProps } from "@/types";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
-  const { userId: clerkId } = auth();
-  if (!clerkId) {
+  const { sessionClaims } = auth();
+  if (!sessionClaims?.userId) {
     redirect("/sign-in");
   }
-  const userId = await getUserIdByClerkId({ userId: clerkId });
-  if (!userId) {
-    return redirect("/404");
-  }
-  const { question, actions, questionId } = await getQuestionBySlug(id, userId);
+  const { question, actions, questionId } = await getQuestionBySlug(
+    id,
+    sessionClaims.userId as string
+  );
   if (!question || !questionId) {
     return redirect("/404");
   }
@@ -44,18 +42,18 @@ const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
       <div className="flex-start w-full flex-col">
         <div className="flex w-full flex-col-reverse justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
           <Link
-            href={`/profile/${question.author.id}`}
+            href={`/profile/${question.owner.id}`}
             className="flex items-center justify-start gap-1"
           >
             <Image
-              src={question.author.picture || "/assets/icons/user.svg"}
-              alt={question.author.name || "User"}
+              src={question.owner.picture || "/assets/icons/user.svg"}
+              alt={question.owner.name || "User"}
               width={22}
               height={22}
               className="rounded-full"
             />
             <p className="text-dark300_light700 paragraph-semibold">
-              {question.author?.name}
+              {question.owner?.name}
             </p>
           </Link>
           <div className="flex justify-end">
@@ -67,7 +65,7 @@ const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
               saveId={saveId}
               type={"question"}
               itemId={questionId}
-              userId={question.author.id || ""}
+              userId={question.owner.id || ""}
             />
           </div>
         </div>
@@ -114,7 +112,7 @@ const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
       </div>
       <AllAnswers
         questionId={questionId}
-        userId={question.author.id || ""}
+        userId={question.owner.id || ""}
         filter={searchParams.filter}
         page={searchParams.page}
       />
@@ -122,7 +120,7 @@ const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
         <Answer
           question={question.content}
           questionId={questionId}
-          authorId={question.author.id || ""}
+          authorId={question.owner.id || ""}
         />
       </div>
     </>

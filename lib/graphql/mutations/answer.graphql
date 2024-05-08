@@ -1,6 +1,6 @@
-mutation postNewAnswer($content: String!, $authorId: ID!, $questionId: ID!) {
+mutation postNewAnswer($content: String!, $ownerId: ID!, $questionId: ID!) {
   createAnswer(
-    input: { content: $content, authorId: $authorId, questionId: $questionId }
+    input: { content: $content, ownerId: $ownerId, questionId: $questionId }
   ) {
     id
   }

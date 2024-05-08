@@ -1,13 +1,5 @@
 # import "../fragments/tag.graphql"
 
-query getUserByClerkId($clerkId: ID!) {
-  usersByClerkId(clerkId: $clerkId) {
-    items {
-      id
-    }
-  }
-}
-
 query getCommunityMembers(
   $skip: Int
   $limit: Int
@@ -43,7 +35,7 @@ query savedQuestions($ownerId: ID!) {
         viewCount
         upvoteCount
         downvoteCount
-        author {
+        owner {
           id
           username
           picture
@@ -101,7 +93,7 @@ query getUserProfile($userId: ID!) {
           viewCount
           upvoteCount
           downvoteCount
-          author {
+          owner {
             id
             username
             picture

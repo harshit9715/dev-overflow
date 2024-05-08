@@ -8,7 +8,7 @@ import EditDeleteAction from "../shared/EditDeleteAction";
 import Metric from "../shared/Metric";
 
 interface AnswerProps {
-  createdAt: Date;
+  createdAt: string;
   question: IQuestion;
   upvotes: string[];
   downvotes: string[];

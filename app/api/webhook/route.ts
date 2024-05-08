@@ -91,6 +91,7 @@ export async function POST(req: Request) {
     //
     const {
       id,
+      external_id: externalId,
       email_addresses: emailAddresses,
       image_url: picture,
       username,
@@ -99,8 +100,8 @@ export async function POST(req: Request) {
     } = evt.data;
 
     // create a user in the database
-    const mongoUser = await updateUser({
-      clerkId: id,
+    const dbUser = await updateUser({
+      userId: externalId as string,
       updateData: {
         username: username!,
         email: emailAddresses[0].email_address,
@@ -110,7 +111,7 @@ export async function POST(req: Request) {
       path: `/profile/${id}`,
     });
 
-    return NextResponse.json({ message: "OK", user: mongoUser });
+    return NextResponse.json({ message: "OK", user: dbUser });
   }
 
   if (eventType === "user.deleted") {

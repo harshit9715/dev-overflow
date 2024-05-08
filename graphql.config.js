@@ -13,6 +13,11 @@ const config = {
           },
         },
       },
+      hooks: {
+        afterOneFileWrite: [
+          'sed -i -e"s|graphql-request/dist/types.dom|graphql-request/src/types.dom|g"',
+        ],
+      },
       documents: "./lib/graphql/**/*.graphql",
       exclude: ["stacks/amplify-schema.graphql"],
       extensions: {

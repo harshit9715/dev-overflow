@@ -3,16 +3,11 @@
 mutation createQuestion(
   $title: String!
   $content: String!
-  $authorId: ID!
+  $ownerId: ID!
   $slug: String!
 ) {
   createQuestion(
-    input: {
-      title: $title
-      content: $content
-      authorId: $authorId
-      slug: $slug
-    }
+    input: { title: $title, content: $content, ownerId: $ownerId, slug: $slug }
   ) {
     ...HomeQuestion
   }

@@ -25,7 +25,7 @@ const QuestionTab = async ({ searchParams, clerkId, userId }: Props) => {
           upvoteCount={question.upvotes}
           downvoteCount={question.downvotes}
           // answers={question.answers}
-          author={question.author}
+          owner={question.author}
           tags={question.tags}
           title={question.title}
           id={question.id}
