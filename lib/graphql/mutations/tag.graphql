@@ -1,5 +1,18 @@
-mutation createTag($label: String!, $description: String) {
-  createTag(input: { label: $label, description: $description }) {
+mutation createTag($label: String!, $description: String, $ownerId: ID!) {
+  createTag(
+    input: {
+      label: $label
+      description: $description
+      ownerId: $ownerId
+      questionCount: 0
+    }
+  ) {
+    id
+  }
+}
+
+mutation updateTagQuestionCount($tagIdForCount: ID!, $count: Int!) {
+  updateTag(input: { id: $tagIdForCount, questionCount: $count }) {
     id
   }
 }

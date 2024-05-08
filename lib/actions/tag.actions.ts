@@ -1,8 +1,9 @@
 "use server";
 
-import { FilterQuery } from "mongoose";
 import Tag from "../database/tag.model";
 import User from "../database/user.model";
+import { SearchableSortDirection } from "../gql/types";
+import { getGraphQLClient } from "../graphql-client";
 import { connectDatabase } from "../mongoose";
 import { GetAllTagsParams, GetTopInteractedTagsParams } from "./shared.types";
 
@@ -38,49 +39,76 @@ export const getTopInteractedTags = async ({
   }
 };
 
-export const getAllTags = async ({
-  filter,
-  page = 1,
-  pageSize = 20,
-  searchQuery,
-}: GetAllTagsParams) => {
+export async function getAllTags(params: GetAllTagsParams) {
   try {
-    connectDatabase();
+    const { searchQuery, filter, page = 1, pageSize = 20 } = params;
+    const client = await getGraphQLClient();
 
-    let sortoptions = {};
-    const skip = (page - 1) * pageSize;
+    let sortAndFilterOptions = {};
+
     switch (filter) {
-      case "popular":
-        sortoptions = { questions: -1 };
-        break;
       case "recent":
-        sortoptions = { createdAt: -1 };
-        break;
-      case "name":
-        sortoptions = { name: 1 };
+        sortAndFilterOptions = {
+          sortField: "createdAt",
+          sortDir: SearchableSortDirection.Desc,
+        };
         break;
       case "old":
-        sortoptions = { createdAt: 1 };
+        sortAndFilterOptions = {
+          sortField: "createdAt",
+          sortDir: SearchableSortDirection.Asc,
+        };
+        break;
+      case "popular":
+        sortAndFilterOptions = {
+          sortField: "questionCount",
+          sortDir: SearchableSortDirection.Desc,
+        };
+        break;
+      case "name":
+        sortAndFilterOptions = {
+          sortField: "label",
+          sortDir: SearchableSortDirection.Asc,
+        };
         break;
       default:
         break;
     }
-    const query: FilterQuery<typeof Tag> = {};
+
     if (searchQuery) {
-      query.$or = [{ name: { $regex: new RegExp(searchQuery, "i") } }];
+      sortAndFilterOptions = {
+        ...sortAndFilterOptions,
+        filter: {
+          or: [
+            {
+              name: {
+                matchPhrasePrefix: searchQuery,
+              },
+            },
+            {
+              username: {
+                matchPhrasePrefix: searchQuery,
+              },
+            },
+          ],
+        },
+      };
     }
-    const tags = await Tag.find(query)
-      .skip(skip)
-      .limit(pageSize)
-      .sort(sortoptions);
-    const totalResults = await Tag.countDocuments(query);
-    const isNext = totalResults > skip + tags.length;
-    return { tags, isNext };
+
+    const skip = (page - 1) * pageSize;
+    const tags = await client.getAllTags({
+      limit: pageSize,
+      skip,
+      ...sortAndFilterOptions,
+    });
+    const totalUsers = tags.searchTags?.total || 0;
+    const isNext = totalUsers > page * pageSize;
+    return { tags: tags.searchTags!.items, isNext };
   } catch (error) {
-    console.error(error);
-    return { tags: [] };
+    console.log(error);
+    throw new Error("Error fetching users");
   }
-};
+}
 
 export const getTagByUserId = async ({ userId }: { userId: string }) => {
   try {
@@ -94,7 +122,7 @@ export const getTagByUserId = async ({ userId }: { userId: string }) => {
   }
 };
 
-export const getPopularTags = async () => {
+export const getPopularTagsOld = async () => {
   try {
     connectDatabase();
 
@@ -115,6 +143,17 @@ export const getPopularTags = async () => {
       .sort({ totalQuestions: -1 })
       .limit(5);
     return { populatTags };
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error getting popular tags");
+  }
+};
+
+export const getPopularTags = async () => {
+  try {
+    const client = await getGraphQLClient();
+    const { searchTags } = await client.popularTags();
+    return { populatTags: searchTags?.items || [] };
   } catch (error) {
     console.error(error);
     throw new Error("Error getting popular tags");

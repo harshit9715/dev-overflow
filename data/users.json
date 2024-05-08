@@ -1,0 +1,30 @@
+[
+    {
+        "id": "User_01HVGMNG9QB4HAP23X0VWXWXSN",
+        "clerkId": "user_2eJRgIQXXmkiIpYXsjdBp8WN3ag",
+        "createdAt": "2024-04-12T17:36:13.682Z",
+        "email": "harshit9715@gmail.com",
+        "name": "Harshit Gupta",
+        "owner": "user_2eJRgIQXXmkiIpYXsjdBp8WN3ag",
+        "picture": "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ2l0aHViL2ltZ18yZUpSZ0ZrQnZ6S1N3YU1OZ1dJZnpscGhNTG0ifQ",
+        "reputation": 0,
+        "role": "USER",
+        "updatedAt": "2024-04-12T17:36:13.682Z",
+        "username": "harshit9715",
+        "__typename": "User"
+    },
+    {
+        "id": "User_01HVGMNG7YKFQQHNETJ6N9H3EH",
+        "clerkId": "user_2enrZYRBiW7IOybdJlFs6sNXfzB",
+        "createdAt": "2024-04-12T17:40:27.360Z",
+        "email": "enrique@diontraining.com",
+        "name": "Enrique Solis",
+        "owner": "user_2eJRgIQXXmkiIpYXsjdBp8WN3ag",
+        "picture": "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yZW5yWlVhc0t0Qnc0bkxjSmZJdUhWc25Ea0kifQ",
+        "reputation": 0,
+        "role": "USER",
+        "updatedAt": "2024-04-12T17:40:27.360Z",
+        "username": "babydev",
+        "__typename": "User"
+    }
+]

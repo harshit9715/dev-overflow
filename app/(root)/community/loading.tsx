@@ -20,7 +20,7 @@ const Loading = () => {
           otherClasses=" min-h-[56px] sm:min-w-[170px]"
         />
       </div>
-      <section className="mt-12 flex flex-wrap gap-4">
+      <section className="mt-12 flex flex-wrap gap-4 py-5">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((id) => (
           <div
             key={id}

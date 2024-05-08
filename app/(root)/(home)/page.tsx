@@ -21,9 +21,10 @@ export const metadata: Metadata = {
 };
 
 const Home = async ({ searchParams }: URLProps) => {
-  const { getToken } = auth();
+  const { getToken, user } = auth();
+  user?.externalId;
   const token = await getToken({ template: "GraphQlOidc" });
-  console.log("token", token);
+  // console.log(token);
   // let questions = [];
   // let isNext = false;
   // if (searchParams?.filter === "recommended") {
@@ -79,20 +80,24 @@ const Home = async ({ searchParams }: URLProps) => {
       <HomeFilters />
       <div className="mt-10 flex w-full flex-col gap-6">
         {questions.length > 0 ? (
-          questions.map((question) => (
-            <QuestionCard
-              key={question?.id}
-              createdAt={question?.createdAt}
-              // views={10}
-              // upvotes={["1", "2", "3"]}
-              // downvotes={["1", "2", "3"]}
-              // answers={["1", "2", "3"]}
-              author={question?.author}
-              tags={question?.tags}
-              title={question?.title || ""}
-              id={question?.id || ""}
-            />
-          ))
+          questions.map(
+            (question) =>
+              question && (
+                <QuestionCard
+                  key={question.id}
+                  slug={question.slug}
+                  createdAt={question?.createdAt}
+                  viewCount={question.viewCount || 0}
+                  upvoteCount={question.upvoteCount || 0}
+                  downvoteCount={question.downvoteCount || 0}
+                  // answers={["1", "2", "3"]}
+                  author={question?.author}
+                  tags={question?.tags}
+                  title={question?.title || ""}
+                  id={question?.slug || ""}
+                />
+              )
+          )
         ) : (
           <NoResult
             title="There's no question to show"

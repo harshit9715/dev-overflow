@@ -26,13 +26,13 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
 interface QuestionProps {
-  mongoUserId: string;
+  userId: string;
   type?: "Edit" | "Create";
   questionDetails?: string;
 }
 
 const Question = ({
-  mongoUserId,
+  userId,
   type = "Create",
   questionDetails,
 }: QuestionProps) => {
@@ -113,7 +113,7 @@ const Question = ({
           title: values.title,
           content: values.explanation,
           tags: values.tags,
-          author: JSON.parse(mongoUserId),
+          userId,
           path: pathname,
         });
         toast.promise(questionPromise, {

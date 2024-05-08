@@ -29,11 +29,12 @@ const TagDetails = async ({ params, searchParams }: URLProps) => {
           tag.questions.map((question: any) => (
             <QuestionCard
               key={question.title}
+              slug={question.slug}
               createdAt={question.createdAt}
-              views={question.views}
-              upvotes={question.upvotes}
-              downvotes={question.downvotes}
-              answers={question.answers}
+              viewCount={question.views}
+              upvoteCount={question.upvotes}
+              downvoteCount={question.downvotes}
+              // answers={question.answers}
               author={question.author}
               tags={question.tags}
               title={question.title}
@@ -54,7 +55,7 @@ const TagDetails = async ({ params, searchParams }: URLProps) => {
       <div className="mt-12">
         <Pagination
           pageNumber={searchParams.page ? +searchParams.page : 1}
-          isNext={isNext}
+          isNext={"isNext"}
         />
       </div>
     </>

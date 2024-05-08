@@ -1,7 +1,43 @@
-#import "../fragments/questions.graphql"
+#import "../fragments/question.graphql"
 
-mutation createQuestion($title: String!, $content: String!) {
-  createQuestion(input: { title: $title, content: $content }) {
+mutation createQuestion(
+  $title: String!
+  $content: String!
+  $authorId: ID!
+  $slug: String!
+) {
+  createQuestion(
+    input: {
+      title: $title
+      content: $content
+      authorId: $authorId
+      slug: $slug
+    }
+  ) {
     ...HomeQuestion
+  }
+}
+
+mutation viewQuestion($questionId: ID!) {
+  updateQuestion(input: { id: $questionId, viewCount: 1 }) {
+    id
+    viewCount
+  }
+}
+
+mutation voteQuestion($questionId: ID!, $upvote: Int!, $downvote: Int!) {
+  updateQuestion(
+    input: { id: $questionId, upvoteCount: $upvote, downvoteCount: $downvote }
+  ) {
+    id
+    upvoteCount
+    downvoteCount
+  }
+}
+
+mutation updateAnswerCount($questionId: ID!, $answerCount: Int!) {
+  updateQuestion(input: { id: $questionId, answerCount: $answerCount }) {
+    id
+    answerCount
   }
 }

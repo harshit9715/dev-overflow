@@ -1,4 +1,5 @@
 import { createUser, deleteUser, updateUser } from "@/lib/actions/user.actions";
+import { getGraphQLRawClient } from "@/lib/graphql-client";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -65,15 +66,26 @@ export async function POST(req: Request) {
     } = evt.data;
 
     // create a user in the database
-    const mongoUser = await createUser({
+    const userId = await createUser({
       clerkId: id,
       username: username!,
       email: emailAddresses[0].email_address,
       name: `${firstName}${lastName ? ` ${lastName}` : ""}`,
       picture,
     });
+    // update the user with the external id in Clerk
+    await fetch(`${process.env.CLERK_API_URL}/v1/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        external_id: userId,
+      }),
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_API_KEY}`,
+      },
+    });
 
-    return NextResponse.json({ message: "OK", user: mongoUser });
+    await getGraphQLRawClient(true);
+    return NextResponse.json({ message: "OK", userId: userId });
   }
   if (eventType === "user.updated") {
     //

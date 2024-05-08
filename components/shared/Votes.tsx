@@ -6,7 +6,7 @@ import { saveQuestion } from "@/lib/actions/user.actions";
 import { bigNumberToString } from "@/lib/utils";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useOptimistic } from "react";
 import { toast } from "sonner";
 
 interface VoteProps {
@@ -15,10 +15,17 @@ interface VoteProps {
   type: "question" | "answer";
   itemId: string;
   userId: string;
-  hasUpvoted: boolean;
-  hasDownvoted: boolean;
-  hasSaved?: boolean;
+  upvoteId?: string;
+  downvoteId?: string;
+  saveId?: string;
 }
+
+type VoteState = {
+  upvotes: number;
+  hasUpvoted?: boolean;
+  downvotes: number;
+  hasDownVoted?: boolean;
+};
 
 const Votes = ({
   upvotes,
@@ -26,19 +33,43 @@ const Votes = ({
   type,
   itemId,
   userId,
-  hasUpvoted,
-  hasDownvoted,
-  hasSaved,
+  saveId,
+  downvoteId,
+  upvoteId,
 }: VoteProps) => {
   const pathname = usePathname();
   const router = useRouter();
+  if (type === "answer") {
+    // console.log(upvoteId);
+  }
+
+  // const [optimisticUpvotes, addOptimisticUpvotes] = useOptimistic(
+  //   { upvotes, hasUpvoted: !!upvoteId }, // Default to 0 likes if null
+  //   (state, l) => ({
+  //     upvotes: state.upvotes + (state.hasUpvoted ? -1 : 1),
+  //     hasUpvoted: !state.hasUpvoted,
+  //   })
+  // );
+
+  const [optimisticVote, newOptimisticVote] = useOptimistic(
+    {
+      downvotes,
+      upvotes,
+      hasDownVoted: !!downvoteId,
+      hasUpvoted: !!upvoteId,
+    },
+    (state, newState: VoteState) => ({
+      ...state,
+      ...newState,
+    })
+  );
 
   useEffect(() => {
     if (type === "question") {
       viewItem({
         type,
-        itemId: JSON.parse(itemId),
-        userId: userId ? JSON.parse(userId) : undefined,
+        itemId,
+        userId: userId ? userId : undefined,
       });
     }
   }, [itemId, userId, pathname, router, type]);
@@ -48,40 +79,73 @@ const Votes = ({
       return toast("Please sign in", {
         description: "You need to sign in to vote",
       });
+
+    newOptimisticVote({
+      upvotes:
+        optimisticVote.upvotes +
+        (voteType === "upvote" ? (!!upvoteId ? -1 : 1) : !!upvoteId ? -1 : 0),
+      downvotes:
+        optimisticVote.downvotes +
+        (voteType === "downvote"
+          ? !!downvoteId
+            ? -1
+            : 1
+          : !!downvoteId
+            ? -1
+            : 0),
+      hasUpvoted: voteType === "upvote" && !optimisticVote.hasUpvoted,
+      hasDownVoted: voteType === "downvote" && !optimisticVote.hasDownVoted,
+    });
+
     if (type === "question") {
-      voteQuestion({
-        questionId: JSON.parse(itemId),
-        userId: JSON.parse(userId),
-        hasdownVoted: voteType === "downvote",
-        hasupVoted: voteType === "upvote",
-        path: pathname,
-      });
+      toast.promise(
+        voteQuestion({
+          questionId: itemId,
+          userId: userId,
+          downvoteAdded: !downvoteId && voteType === "downvote",
+          upvoteAdded: !upvoteId && voteType === "upvote",
+          downvoteRemoved: !!downvoteId,
+          upvoteRemoved: !!upvoteId,
+          upvoteRemovedId: upvoteId,
+          downvoteRemovedId: downvoteId,
+          path: pathname,
+        }),
+        {
+          loading: "Voting...",
+          success: `${upvoteId && voteType === "upvote" ? "Removed your upvote from the question" : downvoteId && voteType === "downvote" ? "Removed your downvote from the question" : `Added your ${voteType} to the question`}`,
+          error: "Error voting",
+        }
+      );
     } else if (type === "answer") {
-      voteAnswer({
-        answerId: JSON.parse(itemId),
-        userId: JSON.parse(userId),
-        hasdownVoted: voteType === "downvote",
-        hasupVoted: voteType === "upvote",
-        path: pathname,
-      });
+      toast.promise(
+        voteAnswer({
+          answerId: itemId,
+          userId: userId,
+          downvoteAdded: !downvoteId && voteType === "downvote",
+          upvoteAdded: !upvoteId && voteType === "upvote",
+          downvoteRemoved: !!downvoteId,
+          upvoteRemoved: !!upvoteId,
+          upvoteRemovedId: upvoteId,
+          downvoteRemovedId: downvoteId,
+          path: pathname,
+        }),
+        {
+          loading: "Voting...",
+          success: `${upvoteId && voteType === "upvote" ? "Removed your upvote from the answer" : downvoteId && voteType === "downvote" ? "Removed your downvote from the answer" : `Added your ${voteType} to the answer`}`,
+          error: "Error voting",
+        }
+      );
     }
-    // todo: show a toast
-    return toast.success(
-      hasUpvoted && voteType === "upvote"
-        ? `Removed your upvote from the ${type}`
-        : hasDownvoted && voteType === "downvote"
-          ? `Removed your downvote from the ${type}`
-          : `Added your ${voteType} to the ${type}`
-    );
   };
   const handleSave = async () => {
     if (!userId) return;
     await saveQuestion({
-      questionId: JSON.parse(itemId),
-      userId: JSON.parse(userId),
+      questionId: itemId,
+      userId,
+      saveId,
       path: pathname,
     });
-    return toast.info(hasSaved ? "Removed from saved" : "Question saved", {});
+    return toast.info(saveId ? "Removed from saved" : "Question saved", {});
   };
   return (
     <div className="flex gap-5">
@@ -89,7 +153,7 @@ const Votes = ({
         <div className="flex-center gap-1.5">
           <Image
             src={
-              hasUpvoted
+              optimisticVote.hasUpvoted
                 ? "/assets/icons/upvoted.svg"
                 : "/assets/icons/upvote.svg"
             }
@@ -101,26 +165,27 @@ const Votes = ({
           />
           <div className="flex-center background-light700_dark400 min-w-[18px] rounded-sm p-1">
             <p className="subtle-medium text-dark400_light900 ">
-              {bigNumberToString(upvotes || 0)}
+              {bigNumberToString(optimisticVote.upvotes || 0)}
             </p>
           </div>
         </div>
         <div className="flex-center gap-1.5">
           <Image
             src={
-              hasDownvoted
+              optimisticVote.hasDownVoted
                 ? "/assets/icons/downvoted.svg"
                 : "/assets/icons/downvote.svg"
             }
             alt="downvote"
             width={18}
             height={18}
-            className="cursor-pointer"
+            // lets animate fill from bottom to top on click
+            className="cursor-pointer hover:transform hover:scale-125 transition-transform duration-200 ease-in-out"
             onClick={() => handleVote("downvote")} // downvote
           />
           <div className="flex-center background-light700_dark400 min-w-[18px] rounded-sm p-1">
             <p className="subtle-medium text-dark400_light900 ">
-              {bigNumberToString(downvotes || 0)}
+              {bigNumberToString(optimisticVote.downvotes || 0)}
             </p>
           </div>
         </div>
@@ -128,7 +193,7 @@ const Votes = ({
       {type === "question" && (
         <Image
           src={
-            hasSaved
+            saveId
               ? "/assets/icons/star-filled.svg"
               : "/assets/icons/star-red.svg"
           }

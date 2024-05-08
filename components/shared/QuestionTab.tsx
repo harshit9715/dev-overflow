@@ -21,20 +21,21 @@ const QuestionTab = async ({ searchParams, clerkId, userId }: Props) => {
           key={question.title}
           clerkId={clerkId}
           createdAt={question.createdAt}
-          views={question.views}
-          upvotes={question.upvotes}
-          downvotes={question.downvotes}
-          answers={question.answers}
+          viewCount={question.views}
+          upvoteCount={question.upvotes}
+          downvoteCount={question.downvotes}
+          // answers={question.answers}
           author={question.author}
           tags={question.tags}
           title={question.title}
-          id={question._id}
+          id={question.id}
+          slug={question.slug}
         />
       ))}
       <div className="mt-2">
         <Pagination
           pageNumber={searchParams.page ? +searchParams.page : 1}
-          isNext={isNext}
+          isNext={"isNext"}
         />
       </div>
     </div>

@@ -4,10 +4,14 @@ import NoResult from "@/components/shared/NoResult";
 import Pagination from "@/components/shared/Pagination";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { QuestionFilters } from "@/constants/filters";
-import { getAllSavedQuestions } from "@/lib/actions/user.actions";
+import {
+  getAllSavedQuestions,
+  getUserIdByClerkId,
+} from "@/lib/actions/user.actions";
 import { URLProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Dev Overflow | Collections Page",
@@ -18,9 +22,16 @@ export const metadata: Metadata = {
 };
 
 const Collections = async ({ searchParams }: URLProps) => {
-  const { userId } = auth();
-  const { savedQuestions, isNext } = await getAllSavedQuestions({
-    clerkId: userId!,
+  const { userId: clerkId } = auth();
+  if (!clerkId) {
+    redirect("/sign-in");
+  }
+  const userId = await getUserIdByClerkId({ userId: clerkId });
+  if (!userId) {
+    redirect("/sign-in");
+  }
+  const { savedQuestions } = await getAllSavedQuestions({
+    userId,
     searchQuery: searchParams.q,
     filter: searchParams.filter,
     page: searchParams.page ? +searchParams.page : 1,
@@ -44,20 +55,23 @@ const Collections = async ({ searchParams }: URLProps) => {
       </div>
       <div className="mt-10 flex w-full flex-col gap-6">
         {savedQuestions.length > 0 ? (
-          savedQuestions.map((question: any) => (
-            <QuestionCard
-              key={question.title}
-              createdAt={question.createdAt}
-              views={question.views}
-              upvotes={question.upvotes}
-              downvotes={question.downvotes}
-              answers={question.answers}
-              author={question.author}
-              tags={question.tags}
-              title={question.title}
-              id={question._id}
-            />
-          ))
+          savedQuestions.map(
+            (question) =>
+              question && (
+                <QuestionCard
+                  key={question.title}
+                  viewCount={question.viewCount}
+                  createdAt={question.createdAt}
+                  downvoteCount={question.downvoteCount}
+                  upvoteCount={question.upvoteCount}
+                  slug={question.slug}
+                  author={question.author}
+                  tags={question.tags}
+                  title={question.title}
+                  id={question.id}
+                />
+              )
+          )
         ) : (
           <NoResult
             title="There's no saved question to show"
@@ -72,7 +86,7 @@ const Collections = async ({ searchParams }: URLProps) => {
       <div className="mt-12">
         <Pagination
           pageNumber={searchParams.page ? +searchParams.page : 1}
-          isNext={isNext}
+          isNext={"false"}
         />
       </div>
     </>

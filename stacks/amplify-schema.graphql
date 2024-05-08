@@ -8,45 +8,55 @@ type User
   @model(subscriptions: { level: off })
   @auth(
     rules: [
+      { allow: private, operations: [read], provider: oidc }
       { allow: public, operations: [read] }
       {
         allow: owner
         operations: [create, update, read]
         provider: oidc
-        identityClaim: "clerkUserId"
+        identityClaim: "userId"
+        ownerField: "id"
       }
     ]
   ) {
   id: ID!
     @auth(
       rules: [
+        { allow: private, operations: [read], provider: oidc }
+        { allow: public, operations: [read] }
         {
           allow: owner
           operations: [create, read]
           provider: oidc
-          identityClaim: "clerkUserId"
+          identityClaim: "userId"
+          ownerField: "id"
         }
       ]
     )
   username: String!
     @auth(
       rules: [
+        { allow: public, operations: [read] }
+        { allow: private, operations: [read], provider: oidc }
         {
           allow: owner
           operations: [create, read]
           provider: oidc
-          identityClaim: "clerkUserId"
+          identityClaim: "userId"
+          ownerField: "id"
         }
       ]
     )
   clerkId: ID!
+    @index(name: "byClerkId")
     @auth(
       rules: [
         {
           allow: owner
           operations: [create, read]
           provider: oidc
-          identityClaim: "clerkUserId"
+          identityClaim: "userId"
+          ownerField: "id"
         }
       ]
     )
@@ -57,7 +67,8 @@ type User
           allow: owner
           operations: [read, create]
           provider: oidc
-          identityClaim: "clerkUserId"
+          identityClaim: "userId"
+          ownerField: "id"
         }
       ]
     )
@@ -66,9 +77,9 @@ type User
   picture: String
   location: String
   portfolioWebsite: String
-  reputation: Int
+  reputation: Int!
   # saved: [ID]
-  role: Role
+  role: Role!
     @default(value: "USER")
     @auth(
       rules: [
@@ -76,25 +87,19 @@ type User
           allow: owner
           operations: [create, read]
           provider: oidc
-          identityClaim: "clerkUserId"
+          identityClaim: "userId"
+          ownerField: "id"
         }
       ]
     )
-  questions: [Question] @hasMany
-  # metaInfo: MetaInfo
+  askedQuestions: [Question]! @hasMany(indexName: "byOwner", fields: ["id"])
+  # savedQuestions: [Question]! @manyToMany(relationName: "SavedQuestions")
+  answersGiven: [Answer]! @hasMany(indexName: "byOwner", fields: ["id"])
+  interactions: [Interaction]! @hasMany(indexName: "byUser", fields: ["id"])
+  tags: [Tag]! @hasMany(indexName: "byOwner", fields: ["id"])
+  yymm: String @index(name: "byYymm", sortKeyFields: ["createdAt"])
+  createdAt: AWSDateTime
 }
-
-# export interface IQuestion extends Document {
-#   title: string;
-#   content: string;
-#   tags: Schema.Types.ObjectId[];
-#   views: number;
-#   upvotes: Schema.Types.ObjectId[];
-#   downvotes: Schema.Types.ObjectId[];
-#   author: Schema.Types.ObjectId;
-#   answers: Schema.Types.ObjectId[];
-#   createdAt: Date;
-# }
 
 type Question
   @searchable
@@ -102,11 +107,13 @@ type Question
   @auth(
     rules: [
       { allow: public, operations: [read] }
+      { allow: private, operations: [read], provider: oidc }
       {
         allow: owner
         operations: [create, update, read]
         provider: oidc
-        identityClaim: "clerkUserId"
+        identityClaim: "userId"
+        ownerField: "ownerId"
       }
     ]
   ) {
@@ -117,15 +124,28 @@ type Question
           allow: owner
           operations: [create, read]
           provider: oidc
-          identityClaim: "clerkUserId"
+          identityClaim: "userId"
+          ownerField: "ownerId"
         }
       ]
     )
   title: String!
+  slug: String! @index(name: "bySlug")
   content: String!
-  # meta: MetaInfo!
-  tags: [Tag] @manyToMany(relationName: "QuestionTags")
-  author: User @belongsTo
+  answerCount: Int @default(value: "0")
+  upvoteCount: Int @default(value: "0")
+  downvoteCount: Int @default(value: "0")
+  viewCount: Int @default(value: "0")
+  interactions: [Interaction]!
+    @hasMany(indexName: "byQuestion", fields: ["id", "ownerId"])
+  tags: [Tag]! @manyToMany(relationName: "QuestionTags")
+  # savedBy: [User]! @manyToMany(relationName: "SavedQuestions")
+  ownerId: ID! @index(name: "byOwner", sortKeyFields: ["createdAt"])
+  owner: User! @belongsTo(fields: ["ownerId"])
+  answers: [Answer]! @hasMany(indexName: "byQuestion", fields: ["id"])
+  yymm: String @index(name: "byYymm", sortKeyFields: ["createdAt"])
+  createdAt: AWSDateTime
+  # ownerInteractions: [Interaction]! @hasMany(indexName: "byQuestion", fields: ["ownerId"])
 }
 
 type Tag
@@ -134,41 +154,105 @@ type Tag
   @auth(
     rules: [
       { allow: public, operations: [read] }
+      { allow: private, operations: [read], provider: oidc }
       {
         allow: owner
         operations: [create, update, read]
         provider: oidc
-        identityClaim: "clerkUserId"
+        identityClaim: "userId"
+        ownerField: "ownerId"
       }
     ]
   ) {
   id: ID!
   label: String! @index(name: "byLabel")
   description: String
-  questions: [Question] @manyToMany(relationName: "QuestionTags")
+  ownerId: ID! @index(name: "byOwner", sortKeyFields: ["label"])
+  owner: User! @belongsTo(fields: ["ownerId"])
+  questionCount: Int! @default(value: "0")
+  questions: [Question]! @manyToMany(relationName: "QuestionTags")
+  yymm: String @index(name: "byYymm", sortKeyFields: ["createdAt"])
+  createdAt: AWSDateTime
 }
 
-# type MetaInfo @model(subscriptions: { level: off }) {
-#   id: ID!
-#   viewsCount: Int @default(value: "0")
-#   upvotesCount: Int @default(value: "0")
-#   downvotesCount: Int @default(value: "0")
-#   views: [Stat]
-#   upvotes: [Stat]
-#   downvotes: [Stat]
-# }
+type Answer
+  @searchable
+  @model(subscriptions: { level: off })
+  @auth(
+    rules: [
+      { allow: public, operations: [read] }
+      { allow: private, operations: [read], provider: oidc }
+      {
+        allow: owner
+        operations: [create, update, read]
+        provider: oidc
+        identityClaim: "userId"
+        ownerField: "ownerId"
+      }
+    ]
+  ) {
+  id: ID!
+    @auth(
+      rules: [
+        {
+          allow: owner
+          operations: [create, read]
+          provider: oidc
+          identityClaim: "userId"
+          ownerField: "ownerId"
+        }
+      ]
+    )
+  questionId: ID!
+    @index(name: "byQuestion", sortKeyFields: ["createdAt"])
+    @index(name: "byPopularQuestions", sortKeyFields: ["upvoteCount"])
+  upvoteCount: Int @default(value: "0")
+  downvoteCount: Int @default(value: "0")
+  question: Question! @belongsTo(fields: ["questionId"])
+  interactions: [Interaction]!
+    @hasMany(indexName: "byAnswer", fields: ["id", "ownerId"])
+  content: String!
+  ownerId: ID! @index(name: "byOwner", sortKeyFields: ["createdAt"])
+  owner: User! @belongsTo(fields: ["ownerId"])
+  yymm: String @index(name: "byYymm", sortKeyFields: ["createdAt"])
+  createdAt: AWSDateTime!
+}
 
-# enum STAT_TYPE {
-#   VIEW
-#   UPVOTE
-#   DOWNVOTE
-# }
+enum InteractionType {
+  VIEW_QUESTION
+  UPVOTE_QUESTION
+  DOWNVOTE_QUESTION
+  UPVOTE_ANSWER
+  DOWNVOTE_ANSWER
+  SAVE_QUESTION
+  ASK_QUESTION
+  REPLY_QUESTION
+}
 
-# type Stat @model(subscriptions: { level: off }) {
-#   id: ID!
-#   # questionId: ID @index(name: "byQuestion", fields: ["questionId"])
-#   # question: Question @belongsTo(fields: ["questionId"])
-#   # answer: Answer @belongsTo(fields: ["answerId"])
-#   user: User @hasOne
-#   type: STAT_TYPE!
-# }
+type Interaction
+  @model
+  @auth(
+    rules: [
+      {
+        allow: owner
+        operations: [create, update, read, delete]
+        provider: oidc
+        identityClaim: "userId"
+        ownerField: "userId"
+      }
+      { allow: private, operations: [read], provider: oidc }
+      { allow: public, operations: [read] }
+    ]
+  ) {
+  id: ID!
+  createdAt: AWSDateTime!
+  type: InteractionType!
+  pointsSelf: Int!
+  pointsTarget: Int
+  ownerId: ID! @index(name: "byUser", sortKeyFields: ["createdAt"])
+  targetUserId: ID @index(name: "byTarget", sortKeyFields: ["createdAt"])
+  questionId: ID @index(name: "byQuestion", sortKeyFields: ["ownerId"])
+  question: Question @belongsTo(fields: ["questionId"])
+  answerId: ID @index(name: "byAnswer", sortKeyFields: ["ownerId"])
+  yymm: String @index(name: "byYymm", sortKeyFields: ["createdAt"])
+}

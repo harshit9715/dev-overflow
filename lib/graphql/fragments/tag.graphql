@@ -2,3 +2,10 @@ fragment TagIdByLabel on Tag {
   id
   label
 }
+
+fragment TagCard on Tag {
+  id
+  label
+  questionCount
+  description
+}

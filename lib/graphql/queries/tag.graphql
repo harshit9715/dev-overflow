@@ -7,3 +7,33 @@ query getTagIdByLabel($label: String!) {
     }
   }
 }
+
+query popularTags($limit: Int) {
+  searchTags(sort: { field: questionCount, direction: desc }, limit: $limit) {
+    items {
+      id
+      label
+      questionCount
+    }
+  }
+}
+
+query getAllTags(
+  $skip: Int
+  $limit: Int
+  $sortField: SearchableTagSortableFields
+  $sortDir: SearchableSortDirection
+  $filter: SearchableTagFilterInput
+) {
+  searchTags(
+    from: $skip
+    limit: $limit
+    sort: { field: $sortField, direction: $sortDir }
+    filter: $filter
+  ) {
+    total
+    items {
+      ...TagCard
+    }
+  }
+}

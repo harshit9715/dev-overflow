@@ -1,0 +1,17 @@
+#import "./tag.graphql"
+
+fragment UserMinFragment on User {
+  id
+  name
+  username
+  picture
+}
+
+fragment UserCard on User {
+  ...UserMinFragment
+  tags(limit: 3) {
+    items {
+      ...TagIdByLabel
+    }
+  }
+}

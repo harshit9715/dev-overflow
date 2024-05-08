@@ -1,3 +1,4 @@
+import { InteractionType } from "@/lib/gql/types";
 import { SidebarLink } from "@/types";
 
 export const themes = [
@@ -65,4 +66,23 @@ export const BADGE_CRITERIA = {
     SILVER: 10000,
     GOLD: 100000,
   },
+};
+
+export const POINT_SYSTEM_SELF = {
+  [InteractionType.AskQuestion]: 10,
+  [InteractionType.ReplyQuestion]: 15,
+  [InteractionType.UpvoteQuestion]: 2,
+  [InteractionType.UpvoteAnswer]: 2,
+  [InteractionType.DownvoteQuestion]: -1,
+  [InteractionType.DownvoteAnswer]: -2,
+  [InteractionType.ViewQuestion]: 1,
+};
+
+export const POINT_SYSTEM_OTHER = {
+  [InteractionType.ReplyQuestion]: 2,
+  [InteractionType.UpvoteQuestion]: 10,
+  [InteractionType.UpvoteAnswer]: 10,
+  [InteractionType.DownvoteQuestion]: -5,
+  [InteractionType.DownvoteAnswer]: -10,
+  [InteractionType.ViewQuestion]: 2,
 };

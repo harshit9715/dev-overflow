@@ -6,6 +6,8 @@ import {
 import { Duration } from "aws-cdk-lib";
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 import { NextjsSite, StackContext } from "sst/constructs";
+import { overrideResolver } from "./override";
+import { getCreateSlots } from "./slots";
 
 export function AppStack({ stack }: StackContext) {
   const HZ = HostedZone.fromLookup(stack, "HZ", {
@@ -13,22 +15,13 @@ export function AppStack({ stack }: StackContext) {
   });
 
   const domainName = `${stack.stage == "dev" ? "devover" : stack.stage}flow.harshit.dev`;
+  const graphQLDefinition = AmplifyGraphqlDefinition.fromFiles(
+    "stacks/amplify-schema.graphql"
+  );
 
-  // lets create a small opensearch cluster
-  // const openSearch = new aws_opensearchservice.Domain(stack, "OpenSearch", {
-  //   version: aws_opensearchservice.EngineVersion.ELASTICSEARCH_7_10,
-  //   capacity: {
-  //     dataNodes: 1,
-  //     dataNodeInstanceType: "t3.small.search",
-  //     //  masterNodeInstanceType: "t3.small.search",
-  //   },
-  //   domainName: "devoverflow-search" + stack.stage,
-  //   removalPolicy: RemovalPolicy.DESTROY,
-  // });
   const graphApi = new AmplifyGraphqlApi(stack, "GraphqlApi", {
-    definition: AmplifyGraphqlDefinition.fromFiles(
-      "stacks/amplify-schema.graphql"
-    ),
+    functionSlots: [...getCreateSlots],
+    definition: graphQLDefinition,
     apiName: "GraphqlApi",
     translationBehavior: {},
     transformerPlugins: [],
@@ -47,11 +40,13 @@ export function AppStack({ stack }: StackContext) {
     },
   });
 
-  // lets connect a OpenSearch data source
-  // graphApi.addOpenSearchDataSource("OpenSearchDS", openSearch, {
-  //   description: "OpenSearch Data Source",
-  //   name: "OpenSearchDS",
-  // });
+  [
+    "MutationUpdateTagDataResolverFn",
+    "MutationUpdateAnswerDataResolverFn",
+    "MutationUpdateQuestionDataResolverFn",
+  ].forEach((resolver) => {
+    overrideResolver(graphApi, resolver, "Mutation.updateWithCounter.vtl");
+  });
 
   new NextjsSite(stack, "DevOverflowSite", {
     customDomain: {

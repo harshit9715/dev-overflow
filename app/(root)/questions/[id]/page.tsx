@@ -4,9 +4,9 @@ import Metric from "@/components/shared/Metric";
 import ParseHTML from "@/components/shared/ParseHTML";
 import RenderTag from "@/components/shared/RenderTag";
 import Votes from "@/components/shared/Votes";
-import { getQuestionById } from "@/lib/actions/question.action";
-import { getUserById } from "@/lib/actions/user.actions";
-import { ITag } from "@/lib/database/tag.model";
+import { getQuestionBySlug } from "@/lib/actions/question.action";
+import { getUserIdByClerkId } from "@/lib/actions/user.actions";
+import { InteractionType } from "@/lib/gql/types";
 import { bigNumberToString, getTimestamp } from "@/lib/utils";
 import { URLProps } from "@/types";
 import { auth } from "@clerk/nextjs";
@@ -15,42 +15,59 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
-  const { question } = await getQuestionById(id);
-  const { userId } = auth();
-  if (!userId) {
+  const { userId: clerkId } = auth();
+  if (!clerkId) {
     redirect("/sign-in");
   }
-  const mongoUser = await getUserById({ userId });
+  const userId = await getUserIdByClerkId({ userId: clerkId });
+  if (!userId) {
+    return redirect("/404");
+  }
+  const { question, actions, questionId } = await getQuestionBySlug(id, userId);
+  if (!question || !questionId) {
+    return redirect("/404");
+  }
+
+  const upvoteId = actions.find(
+    (action) => action?.type === InteractionType.UpvoteQuestion
+  )?.id;
+  const downvoteId = actions.find(
+    (action) => action?.type === InteractionType.DownvoteQuestion
+  )?.id;
+
+  const saveId = actions.find(
+    (action) => action?.type === InteractionType.SaveQuestion
+  )?.id;
 
   return (
     <>
       <div className="flex-start w-full flex-col">
         <div className="flex w-full flex-col-reverse justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
           <Link
-            href={`/profile/${question.author.clerkId}`}
+            href={`/profile/${question.author.id}`}
             className="flex items-center justify-start gap-1"
           >
             <Image
-              src={question.author.picture}
-              alt={question.author.username}
+              src={question.author.picture || "/assets/icons/user.svg"}
+              alt={question.author.name || "User"}
               width={22}
               height={22}
               className="rounded-full"
             />
             <p className="text-dark300_light700 paragraph-semibold">
-              {question.author.name}
+              {question.author?.name}
             </p>
           </Link>
           <div className="flex justify-end">
             <Votes
-              upvotes={question.upvotes.length}
-              downvotes={question.downvotes.length}
-              hasUpvoted={question.upvotes.includes(mongoUser._id)}
-              hasDownvoted={question.downvotes.includes(mongoUser._id)}
-              hasSaved={mongoUser?.saved.includes(question._id)}
+              upvotes={question.upvoteCount || 0}
+              downvotes={question.downvoteCount || 0}
+              upvoteId={upvoteId}
+              downvoteId={downvoteId}
+              saveId={saveId}
               type={"question"}
-              itemId={JSON.stringify(question._id)}
-              userId={JSON.stringify(mongoUser._id)}
+              itemId={questionId}
+              userId={question.author.id || ""}
             />
           </div>
         </div>
@@ -69,14 +86,14 @@ const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
         <Metric
           imgUrl="/assets/icons/message.svg"
           alt="Upvotes"
-          value={bigNumberToString(question.answers.length)}
+          value={bigNumberToString(question.upvoteCount || 0)}
           title=" Answers"
           textStyles="small-medium text-dark400_light800"
         />
         <Metric
           imgUrl="/assets/icons/eye.svg"
           alt="eye"
-          value={bigNumberToString(question.views)}
+          value={bigNumberToString(question.viewCount || 0)}
           title=" Views"
           textStyles="small-medium text-dark400_light800"
         />
@@ -84,22 +101,28 @@ const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
 
       <ParseHTML data={question.content} />
       <div className="mt-8 flex flex-wrap gap-2">
-        {question.tags.map((tag: ITag) => (
-          <RenderTag key={tag._id} _id={tag._id} name={tag.name} />
-        ))}
+        {question.tags?.items.map(
+          (tag, ix) =>
+            tag && (
+              <RenderTag
+                key={tag.tag.label}
+                _id={`${tag.tag.label}`}
+                name={`${tag.tag.label}`}
+              />
+            )
+        )}
       </div>
       <AllAnswers
-        questionId={JSON.stringify(question._id)}
-        userId={JSON.stringify(mongoUser._id)}
-        totalAnswers={question.answers.length}
+        questionId={questionId}
+        userId={question.author.id || ""}
         filter={searchParams.filter}
         page={searchParams.page}
       />
       <div>
         <Answer
           question={question.content}
-          questionId={JSON.stringify(question._id)}
-          authorId={JSON.stringify(mongoUser._id)}
+          questionId={questionId}
+          authorId={question.author.id || ""}
         />
       </div>
     </>

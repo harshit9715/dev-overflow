@@ -2,6 +2,7 @@ import { BADGE_CRITERIA } from "@/constants";
 import { BadgeCounts } from "@/types";
 import { clsx, type ClassValue } from "clsx";
 import qs from "query-string";
+import slug from "slug";
 import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -89,3 +90,15 @@ export const assignBadge = ({ criteria }: BadgeParams) => {
   });
   return badgeCounts;
 };
+
+export const getYearMonth = () => new Date().toISOString().slice(0, 7);
+
+export const slugify = (text: string, unique = false) => {
+  // add a random number to the slug to avoid conflicts
+  const random = Math.floor(Math.random() * 100000);
+  const slugString = slug(text, { lower: true, symbols: false, trim: true });
+  return unique ? `${slugString}-${random}` : slugString;
+};
+
+export const sleep = (seconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, seconds * 1000));

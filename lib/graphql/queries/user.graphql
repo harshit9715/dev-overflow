@@ -1,0 +1,120 @@
+# import "../fragments/tag.graphql"
+
+query getUserByClerkId($clerkId: ID!) {
+  usersByClerkId(clerkId: $clerkId) {
+    items {
+      id
+    }
+  }
+}
+
+query getCommunityMembers(
+  $skip: Int
+  $limit: Int
+  $sortField: SearchableUserSortableFields
+  $sortDir: SearchableSortDirection
+  $filter: SearchableUserFilterInput
+) {
+  searchUsers(
+    from: $skip
+    limit: $limit
+    sort: { field: $sortField, direction: $sortDir }
+    filter: $filter
+  ) {
+    total
+    items {
+      ...UserCard
+    }
+  }
+}
+
+query savedQuestions($ownerId: ID!) {
+  interactionsByOwnerIdAndCreatedAt(
+    ownerId: $ownerId
+    filter: { type: { eq: SAVE_QUESTION } }
+  ) {
+    items {
+      id
+      question {
+        title
+        slug
+        id
+        createdAt
+        viewCount
+        upvoteCount
+        downvoteCount
+        author {
+          id
+          username
+          picture
+        }
+        tags(limit: 2) {
+          items {
+            tag {
+              ...TagCard
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query getUserProfile($userId: ID!) {
+  getUser(id: $userId) {
+    id
+    name
+    username
+    picture
+    portfolioWebsite
+    bio
+    createdAt
+    location
+    clerkId
+    askedQuestions {
+      items {
+        id
+        title
+        slug
+        createdAt
+        viewCount
+        upvoteCount
+        downvoteCount
+        answerCount
+        tags(limit: 2) {
+          items {
+            tag {
+              ...TagCard
+            }
+          }
+        }
+      }
+    }
+    answersGiven {
+      items {
+        id
+        question {
+          id
+          title
+          slug
+          createdAt
+          viewCount
+          upvoteCount
+          downvoteCount
+          author {
+            id
+            username
+            picture
+          }
+          tags(limit: 2) {
+            items {
+              tag {
+                ...TagCard
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

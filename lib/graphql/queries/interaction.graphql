@@ -1,0 +1,36 @@
+query listQuestionActionsForUser($ownerId: ID!, $questionId: ID!) {
+  interactionsByQuestionIdAndOwnerId(
+    ownerId: { eq: $ownerId }
+    questionId: $questionId
+  ) {
+    items {
+      id
+      type
+    }
+  }
+}
+
+query checkQuestionViewed($ownerId: ID!, $questionId: ID!) {
+  interactionsByQuestionIdAndOwnerId(
+    ownerId: { eq: $ownerId }
+    questionId: $questionId
+    filter: { type: { eq: VIEW_QUESTION } }
+  ) {
+    items {
+      id
+      type
+    }
+  }
+}
+
+query listAnswerActionsForUser($ownerId: ID!, $answerId: ID!) {
+  interactionsByAnswerIdAndOwnerId(
+    ownerId: { eq: $ownerId }
+    answerId: $answerId
+  ) {
+    items {
+      id
+      type
+    }
+  }
+}

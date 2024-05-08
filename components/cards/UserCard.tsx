@@ -1,24 +1,23 @@
-import { getTopInteractedTags } from "@/lib/actions/tag.actions";
-import { IUser } from "@/lib/database/user.model";
+import { UserCardFragment } from "@/lib/gql/types";
 import Image from "next/image";
 import Link from "next/link";
 import RenderTag from "../shared/RenderTag";
 import { Badge } from "../ui/badge";
 
 interface UserCardProps {
-  user: IUser;
+  user: UserCardFragment;
 }
 
 const UserCard = async ({ user }: UserCardProps) => {
-  const interactedTags = await getTopInteractedTags({ userId: user._id });
+  // const interactedTags = await getTopInteractedTags({ userId: user.id });
   return (
     <article className="background-light900_dark200 shadow-light100_darknone light-border flex flex-col items-center rounded-2xl py-8">
       <Link
-        href={`/profile/${user.clerkId}`}
+        href={`/profile/${user.id}`}
         className="flex w-full flex-col items-center justify-center max-xs:min-w-full xs:w-[260px]"
       >
         <Image
-          src={user.picture!}
+          src={user.picture || "/assets/icons/user.svg"}
           alt="User Picture"
           width={100}
           height={100}
@@ -34,14 +33,15 @@ const UserCard = async ({ user }: UserCardProps) => {
         </div>
       </Link>
       <div className="mt-5">
-        {interactedTags.length > 0 ? (
-          <div className="flex items-center gap-2">
-            {interactedTags.map((tag) => (
-              <RenderTag key={tag._id} _id={tag._id} name={tag.name} />
-            ))}
+        {user.tags?.items.length ? (
+          <div className="flex items-center gap-1">
+            {user.tags.items.map(
+              (tag) =>
+                tag && <RenderTag key={tag.id} _id={tag.id} name={tag.label} />
+            )}
           </div>
         ) : (
-          <Badge>No tags yet</Badge>
+          <Badge className="body-regular text-dark500_light700">No tags</Badge>
         )}
       </div>
     </article>

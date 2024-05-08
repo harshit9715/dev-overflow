@@ -1,0 +1,17 @@
+mutation postNewAnswer($content: String!, $authorId: ID!, $questionId: ID!) {
+  createAnswer(
+    input: { content: $content, authorId: $authorId, questionId: $questionId }
+  ) {
+    id
+  }
+}
+
+mutation voteAnswer($answerId: ID!, $upvote: Int!, $downvote: Int!) {
+  updateAnswer(
+    input: { id: $answerId, upvoteCount: $upvote, downvoteCount: $downvote }
+  ) {
+    id
+    upvoteCount
+    downvoteCount
+  }
+}

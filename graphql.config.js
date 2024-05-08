@@ -9,31 +9,19 @@ const config = {
       schema: {
         [process.env.GRAPHQL_SCHEMA_ENDPOINT]: {
           headers: {
-            Authorization: process.env.GRAPHQL_TEST_TOKEN,
+            'x-api-key': process.env.GRAPHQL_API_KEY,
           },
         },
       },
       documents: "./lib/graphql/**/*.graphql",
+      exclude: ["stacks/amplify-schema.graphql"],
       extensions: {
         endpoints: {
           default: {
             url: `${process.env.GRAPHQL_SCHEMA_ENDPOINT}`,
-            headers: { Authorization: `${process.env.GRAPHQL_TEST_TOKEN}` },
+            headers: { 'x-api-key': `${process.env.GRAPHQL_API_KEY}` },
           },
         },
-        codegen: {
-          watch: "./lib/graphql/**/*.graphql",
-          overwrite: true,
-          generates: {
-            "./lib/gql/types.ts": {
-              plugins: [
-                "typescript",
-                "typescript-operations",
-                "typescript-graphql-request",
-              ],
-            },
-          },
-        }
       },
     },
   },

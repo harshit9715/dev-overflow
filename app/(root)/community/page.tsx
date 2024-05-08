@@ -45,7 +45,9 @@ const Community = async ({ searchParams }: URLProps) => {
       </div>
       <section className="mt-12 flex flex-wrap gap-4">
         {users.length > 0 ? (
-          users.map((user) => <UserCard key={user.username} user={user} />)
+          users.map(
+            (user) => user && <UserCard key={user.username} user={user} />
+          )
         ) : (
           <NoResult
             description="Be the first to join the community. 🚀"
@@ -58,7 +60,7 @@ const Community = async ({ searchParams }: URLProps) => {
       <div className="mt-12">
         <Pagination
           pageNumber={searchParams.page ? +searchParams.page : 1}
-          isNext={isNext}
+          isNext={`isNext`}
         />
       </div>
     </>

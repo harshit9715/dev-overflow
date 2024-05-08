@@ -1,0 +1,28 @@
+query getAnswersForQuestion($limit: Int, $skip: Int, $questionId: ID!) {
+  searchAnswers(
+    from: $skip
+    filter: { questionId: { eq: $questionId } }
+    sort: { field: upvoteCount, direction: desc }
+    limit: $limit
+  ) {
+    items {
+      id
+      content
+      upvoteCount
+      downvoteCount
+      createdAt
+      author {
+        id
+        name
+        picture
+      }
+      interactions {
+        items {
+          id
+          type
+        }
+      }
+    }
+    total
+  }
+}

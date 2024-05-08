@@ -1,9 +1,14 @@
 #import "./tag.graphql"
+#import "./user.graphql"
 
 fragment HomeQuestion on Question {
   id
+  slug
   title
   createdAt
+  upvoteCount
+  downvoteCount
+  viewCount
   tags {
     items {
       tag {
@@ -12,8 +17,6 @@ fragment HomeQuestion on Question {
     }
   }
   author {
-    name
-    picture
-    clerkId
+    ...UserMinFragment
   }
 }

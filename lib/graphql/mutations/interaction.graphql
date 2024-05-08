@@ -1,0 +1,80 @@
+mutation createQuestionAction(
+  $ownerId: ID!
+  $targetUserId: ID
+  $questionId: ID!
+  $pointsSelf: Int!
+  $pointsTarget: Int
+  $actionType: InteractionType!
+) {
+  createInteraction(
+    input: {
+      ownerId: $ownerId
+      targetUserId: $targetUserId
+      type: $actionType
+      questionId: $questionId
+      pointsSelf: $pointsSelf
+      pointsTarget: $pointsTarget
+    }
+  ) {
+    id
+    userId
+    type
+    questionId
+  }
+}
+
+mutation updateInteraction(
+  $id: ID!
+  $actionType: InteractionType!
+  $pointsSelf: Int!
+  $pointsTarget: Int
+) {
+  updateInteraction(
+    input: {
+      id: $id
+      type: $actionType
+      pointsSelf: $pointsSelf
+      pointsTarget: $pointsTarget
+    }
+  ) {
+    id
+    userId
+    type
+    questionId
+  }
+}
+
+mutation createAnswerAction(
+  $ownerId: ID!
+  $targetUserId: ID!
+  $answerId: ID!
+  $pointsSelf: Int!
+  $pointsTarget: Int
+  $actionType: InteractionType!
+  $questionId: ID
+) {
+  createInteraction(
+    input: {
+      ownerId: $ownerId
+      targetUserId: $targetUserId
+      type: $actionType
+      answerId: $answerId
+      questionId: $questionId
+      pointsSelf: $pointsSelf
+      pointsTarget: $pointsTarget
+    }
+  ) {
+    id
+    userId
+    type
+    questionId
+  }
+}
+
+mutation deleteInteraction($actionId: ID!) {
+  deleteInteraction(input: { id: $actionId }) {
+    userId
+    type
+    questionId
+  }
+}

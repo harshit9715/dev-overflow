@@ -1,5 +1,6 @@
 "use server";
 
+import { POINT_SYSTEM_OTHER, POINT_SYSTEM_SELF } from "@/constants";
 import {
   default as combinedQuery,
   default as comineQuery,
@@ -12,13 +13,17 @@ import Question from "../database/question.model";
 import Tag from "../database/tag.model";
 import User from "../database/user.model";
 import {
+  CreateQuestionActionDocument,
   GetTagIdByLabelDocument,
   GetTagIdByLabelQuery,
+  InteractionType,
   LinkQuestionTagDocument,
   QuestionTags,
+  UpdateTagQuestionCountDocument,
 } from "../gql/types";
 import { getGraphQLClient, getGraphQLRawClient } from "../graphql-client";
 import { connectDatabase } from "../mongoose";
+import { slugify } from "../utils";
 import { fetchOpenAICompletion } from "./general.action";
 import {
   CreateQuestionParams,
@@ -30,63 +35,6 @@ import {
   QuestionVoteParams,
   RecommendedParams,
 } from "./shared.types";
-
-export async function createQuestionOld(params: CreateQuestionParams) {
-  try {
-    connectDatabase();
-    const { title, tags, content, author, path } = params;
-    const question = await Question.create({
-      title,
-      content,
-      author,
-    });
-
-    const tagDocuments = [] as string[];
-
-    await Promise.all(
-      tags.map(async (tag) => {
-        const existingTag = await Tag.findOne({
-          name: { $regex: new RegExp(`^${tag}$`, "i") },
-        });
-
-        if (existingTag) {
-          existingTag.questions.push(question._id);
-          await existingTag.save();
-          tagDocuments.push(existingTag._id);
-        } else {
-          const response = await fetchOpenAICompletion(
-            `a brief description of the ${tag} in less than 100 characters in plaintext.`
-          );
-          const reply = response.choices[0].message.content;
-
-          const newTag = await Tag.create({
-            name: tag,
-            description: reply,
-            questions: [question._id],
-          });
-          tagDocuments.push(newTag._id);
-        }
-      })
-    );
-
-    await Question.findByIdAndUpdate(question._id, {
-      $push: { tags: { $each: tagDocuments } },
-    });
-
-    await Interaction.create({
-      user: author,
-      action: "ask_question",
-      question: question._id,
-      tags: tagDocuments,
-    });
-
-    await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } });
-
-    revalidatePath(path);
-  } catch (error) {
-    console.log(error);
-  }
-}
 
 export async function getQuestionsOld(params: GetQuestionsParams) {
   try {
@@ -153,81 +101,86 @@ export async function getQuestionById(id: string) {
   }
 }
 
+export async function getQuestionBySlug(slug: string, userId: string) {
+  try {
+    const client = await getGraphQLClient();
+    const questionIdReq = await client.getQuestionFromSlug({ slug });
+    if (!questionIdReq.questionsBySlug?.items.length) return { question: null };
+    const question = await client.getQuestionDetails({
+      questionId: questionIdReq.questionsBySlug.items[0]!.id,
+      ownerId: userId,
+    });
+    return {
+      questionId: questionIdReq.questionsBySlug.items[0]!.id,
+      question: question.getQuestion,
+      actions: question.interactionsByQuestionIdAndOwnerId?.items || [],
+    };
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error fetching question");
+  }
+}
+
 export async function voteQuestion({
   questionId,
-  hasdownVoted,
-  hasupVoted,
+  upvoteAdded,
+  upvoteRemoved,
+  upvoteRemovedId,
+  downvoteAdded,
+  downvoteRemoved,
+  downvoteRemovedId,
   userId,
   path,
 }: QuestionVoteParams) {
   try {
-    connectDatabase();
-    const question = await Question.findById(questionId);
-
-    if (!question) {
-      throw new Error("Question not found");
-    }
-
-    if (hasupVoted) {
-      if (question.upvotes.includes(userId)) {
-        await question.updateOne({ $pull: { upvotes: userId } });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: -1 },
-        });
-        if (question.author.toString() !== userId) {
-          await User.findByIdAndUpdate(question.author, {
-            $inc: { reputation: -10 },
-          });
-        }
-      } else {
-        let times = 1;
-        if (question.downvotes.includes(userId)) {
-          await question.updateOne({ $pull: { downvotes: userId } });
-          times = 2;
-        }
-        await question.updateOne({ $push: { upvotes: userId } });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: times * 1 },
-        });
-        if (question.author.toString() !== userId) {
-          await User.findByIdAndUpdate(question.author, {
-            $inc: { reputation: times * 10 },
-          });
-        }
-      }
-    }
-    if (hasdownVoted) {
-      if (question.downvotes.includes(userId)) {
-        await question.updateOne({ $pull: { downvotes: userId } });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: 1 },
-        });
-        if (question.author.toString() !== userId) {
-          await User.findByIdAndUpdate(question.author, {
-            $inc: { reputation: 10 },
-          });
-        }
-      } else {
-        let times = 1;
-        if (question.upvotes.includes(userId)) {
-          await question.updateOne({ $pull: { upvotes: userId } });
-          times = 2;
-        }
-        await question.updateOne({ $push: { downvotes: userId } });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: -1 * times },
-        });
-        if (question.author.toString() !== userId) {
-          await User.findByIdAndUpdate(question.author, {
-            $inc: { reputation: -10 * times },
-          });
-        }
-      }
-    }
-
+    console.log(
+      upvoteAdded,
+      upvoteRemoved,
+      upvoteRemovedId,
+      downvoteRemoved,
+      downvoteRemovedId
+    );
+    const client = await getGraphQLClient();
+    await Promise.all([
+      // update the question with the vote
+      client.voteQuestion({
+        questionId,
+        upvote: upvoteAdded ? 1 : upvoteRemoved ? -1 : 0,
+        downvote: downvoteAdded ? 1 : downvoteRemoved ? -1 : 0,
+      }),
+      // update the interaction with the upvote if it was added
+      upvoteAdded &&
+        client.createQuestionAction({
+          actionType: InteractionType.UpvoteQuestion,
+          questionId,
+          ownerId: userId,
+          pointsSelf: POINT_SYSTEM_SELF[InteractionType.UpvoteQuestion],
+          pointsTarget: POINT_SYSTEM_OTHER[InteractionType.UpvoteQuestion],
+        }),
+      // update the interaction with the downvote if it was added
+      downvoteAdded &&
+        client.createQuestionAction({
+          actionType: InteractionType.DownvoteQuestion,
+          questionId,
+          ownerId: userId,
+          pointsSelf: POINT_SYSTEM_SELF[InteractionType.DownvoteQuestion],
+          pointsTarget: POINT_SYSTEM_OTHER[InteractionType.DownvoteQuestion],
+        }),
+      // remove the interaction with the upvote if it was removed
+      upvoteRemoved &&
+        upvoteRemovedId &&
+        client.deleteInteraction({
+          actionId: upvoteRemovedId,
+        }),
+      // remove the interaction with the downvote if it was removed
+      downvoteRemoved &&
+        downvoteRemovedId &&
+        client.deleteInteraction({
+          actionId: downvoteRemovedId,
+        }),
+    ]);
     revalidatePath(path);
   } catch (error) {
-    console.log(error);
     throw new Error("Error voting question");
   }
 }
@@ -399,42 +352,56 @@ export async function getRecommendedQuestions(params: RecommendedParams) {
 
 export async function createQuestion(params: CreateQuestionParams) {
   try {
-    const { title, tags, content, author, path } = params;
+    const { title, tags, content, userId, path } = params;
 
-    const tagDocuments = [] as string[];
-
-    const tagMap = await handleTagsUpsert(tags);
+    const tagMap = await handleTagsUpsert(tags, userId);
 
     const client = await getGraphQLClient();
     const rawClient = await getGraphQLRawClient();
     const createQueRes = await client.createQuestion({
       title,
       content,
+      authorId: userId,
+      slug: slugify(title, true),
     });
     if (createQueRes.createQuestion?.id) {
-      const { document, variables } = combinedQuery(
-        "linkQuestionWithTags"
-      ).addN(
-        LinkQuestionTagDocument,
-        Object.values(tagMap).map((tag) => ({
+      const { document, variables } = combinedQuery("linkQuestionWithTags")
+        .addN(
+          LinkQuestionTagDocument,
+          Object.values(tagMap).map((tag) => ({
+            questionId: createQueRes.createQuestion!.id,
+            tagIdToLink: tag,
+          }))
+        )
+        // ? Update tag count
+        .addN(
+          UpdateTagQuestionCountDocument,
+          Object.values(tagMap).map((tag) => ({
+            count: 1,
+            tagIdForCount: tag,
+          }))
+        )
+        // ? Update interaction with created question
+        .add(CreateQuestionActionDocument, {
+          userId,
           questionId: createQueRes.createQuestion!.id,
-          tagId: tag,
-        }))
-      );
+          actionType: InteractionType.AskQuestion,
+        });
       await rawClient.request<Record<string, QuestionTags>>(
         document,
         variables
       );
     }
-    // console.log(JSON.stringify(response, null, 2));
     revalidatePath(path);
   } catch (error: any) {
+    console.error(error);
     console.log(JSON.stringify(error.response));
     throw new Error("Error creating question");
   }
 }
 
-const handleTagsUpsert = async (tags: string[]) => {
+const handleTagsUpsert = async (rawTags: string[], ownerId: string) => {
+  const tags = rawTags.map((tag) => slugify(tag));
   let tagMap: Record<string, string> = {};
   const rawClient = await getGraphQLRawClient();
   const client = await getGraphQLClient();
@@ -445,7 +412,6 @@ const handleTagsUpsert = async (tags: string[]) => {
   const response = await rawClient.request<
     Record<string, GetTagIdByLabelQuery["tagsByLabel"]>
   >(document, variables);
-
   for (let [index, tagRes] of Object.values(response).entries()) {
     if (tagRes?.items.length) {
       tagMap[tags[index]] = tagRes.items[0]?.id || "";
@@ -457,6 +423,7 @@ const handleTagsUpsert = async (tags: string[]) => {
       const createTagRes = await client.createTag({
         label: tags[index],
         description: reply,
+        ownerId,
       });
       tagMap[tags[index]] = createTagRes.createTag?.id || "";
     }
@@ -485,14 +452,14 @@ export async function getQuestions(params: GetQuestionsParamsDynamo) {
   }
 }
 
-export const getHotQuestions = async () => {
+export const getHotQuestions = async (userId?: string) => {
   try {
     const client = await getGraphQLClient();
-    const questions = await client.HotQuestions({
+    const questions = await client.getTopQuestions({
       limit: 10,
+      userId,
     });
-    console.log(JSON.stringify(questions, null, 2));
-    return { hotQuestions: questions.listQuestions?.items || [] };
+    return { hotQuestions: questions.searchQuestions?.items || [] };
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching hot questions");

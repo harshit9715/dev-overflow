@@ -1,11 +1,11 @@
 "use server";
 import { BadgeCriteriaType } from "@/types";
-import { FilterQuery } from "mongoose";
 import { revalidatePath } from "next/cache";
 import Answer from "../database/answer.model";
-import Question, { IQuestion } from "../database/question.model";
-import Tag from "../database/tag.model";
+import Question from "../database/question.model";
 import User, { IUser } from "../database/user.model";
+import { InteractionType, SearchableSortDirection } from "../gql/types";
+import { getGraphQLClient } from "../graphql-client";
 import { connectDatabase } from "../mongoose";
 import { assignBadge } from "../utils";
 import {
@@ -19,28 +19,11 @@ import {
   UpdateUserParams,
 } from "./shared.types";
 
-export async function getUserById(params: GetUserByIdParams) {
-  try {
-    connectDatabase();
-    const { userId } = params;
-    const user = await User.findOne({ clerkId: userId });
-    return user as IUser;
-  } catch (error) {
-    console.log(error);
-    throw new Error("Error fetching user");
-  }
-}
-
-export async function createUser(params: CreateUserParams) {
-  try {
-    connectDatabase();
-    const user = await User.create(params);
-    return user as IUser;
-  } catch (error) {
-    console.log(error);
-    return null;
-    // throw new Error("Error creating user");
-  }
+export async function getUserIdByClerkId(params: GetUserByIdParams) {
+  const userQuery = await getGraphQLClient().then((client) =>
+    client.getUserByClerkId({ clerkId: params.userId })
+  );
+  return userQuery.usersByClerkId?.items[0]?.id;
 }
 
 export async function updateUser(params: UpdateUserParams) {
@@ -94,40 +77,63 @@ export async function deleteUser(params: DeleteUserParams) {
 
 export async function getAllUsers(params: GetAllUsersParams) {
   try {
-    connectDatabase();
     const { searchQuery, filter, page = 1, pageSize = 20 } = params;
-    const query: FilterQuery<typeof User> = {};
+    const client = await getGraphQLClient();
 
-    if (searchQuery) {
-      query.$or = [
-        { name: { $regex: new RegExp(searchQuery, "i") } },
-        { username: { $regex: new RegExp(searchQuery, "i") } },
-      ];
-    }
-
-    let sortOptions = {};
+    let sortAndFilterOptions = {};
 
     switch (filter) {
       case "new_users":
-        sortOptions = { joinedAt: -1 };
+        sortAndFilterOptions = {
+          sortField: "createdAt",
+          sortDir: SearchableSortDirection.Desc,
+        };
         break;
       case "old_users":
-        sortOptions = { joinedAt: 1 };
+        sortAndFilterOptions = {
+          sortField: "createdAt",
+          sortDir: SearchableSortDirection.Asc,
+        };
         break;
       case "top_contributors":
-        sortOptions = { reputation: -1 };
+        sortAndFilterOptions = {
+          sortField: "reputation",
+          sortDir: SearchableSortDirection.Desc,
+        };
         break;
       default:
         break;
     }
+
+    if (searchQuery) {
+      sortAndFilterOptions = {
+        ...sortAndFilterOptions,
+        filter: {
+          or: [
+            {
+              name: {
+                matchPhrasePrefix: searchQuery,
+              },
+            },
+            {
+              username: {
+                matchPhrasePrefix: searchQuery,
+              },
+            },
+          ],
+        },
+      };
+    }
+
     const skip = (page - 1) * pageSize;
-    const users = await User.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(pageSize);
-    const totalUsers = await User.countDocuments(query);
-    const isNext = totalUsers > skip + users.length;
-    return { users, isNext };
+    const users = await client.getCommunityMembers({
+      limit: pageSize,
+      skip,
+      ...sortAndFilterOptions,
+    });
+    const totalUsers = users.searchUsers?.total || 0;
+    const isNext = totalUsers > page * pageSize;
+    return { users: users.searchUsers!.items, isNext };
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching users");
@@ -136,19 +142,18 @@ export async function getAllUsers(params: GetAllUsersParams) {
 
 export const saveQuestion = async (params: ToggleSaveQuestionParams) => {
   try {
-    connectDatabase();
-    const { userId, questionId, path } = params;
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    if (user.saved.includes(questionId)) {
-      await user.updateOne({ $pull: { saved: questionId } });
+    const { path, questionId, userId, saveId } = params;
+    const client = await getGraphQLClient();
+    if (saveId) {
+      await client.deleteInteraction({ actionId: saveId });
     } else {
-      await user.updateOne({ $push: { saved: questionId } });
+      await client.createQuestionAction({
+        questionId,
+        ownerId: userId,
+        pointsSelf: 0,
+        actionType: InteractionType.SaveQuestion,
+      });
     }
-
     revalidatePath(path);
   } catch (error) {
     console.log(error);
@@ -158,57 +163,41 @@ export const saveQuestion = async (params: ToggleSaveQuestionParams) => {
 
 export const getAllSavedQuestions = async (params: GetSavedQuestionsParams) => {
   try {
-    connectDatabase();
-    const { clerkId, page = 1, pageSize = 15, searchQuery, filter } = params;
+    const client = await getGraphQLClient();
+    const { userId, page = 1, pageSize = 15, searchQuery, filter } = params;
 
-    let sortOptions = {};
+    // let sortOptions = {};
 
-    switch (filter) {
-      case "most_recent":
-        sortOptions = { createdAt: -1 };
-        break;
-      case "oldest":
-        sortOptions = { createdAt: 1 };
-        break;
-      case "most_voted":
-        sortOptions = { upvotes: -1 };
-        break;
-      case "most_viewed":
-        sortOptions = { views: -1 };
-        break;
-      case "most_answered":
-        sortOptions = { answers: -1 };
-        break;
-      default:
-        break;
-    }
+    // switch (filter) {
+    //   case "most_recent":
+    //     sortOptions = { createdAt: -1 };
+    //     break;
+    //   case "oldest":
+    //     sortOptions = { createdAt: 1 };
+    //     break;
+    //   case "most_voted":
+    //     sortOptions = { upvotes: -1 };
+    //     break;
+    //   case "most_viewed":
+    //     sortOptions = { views: -1 };
+    //     break;
+    //   case "most_answered":
+    //     sortOptions = { answers: -1 };
+    //     break;
+    //   default:
+    //     break;
+    // }
 
-    const skip = (page - 1) * pageSize;
-
-    const questionFilter: FilterQuery<IQuestion> = { author: clerkId };
-    const user = await User.findOne(questionFilter).populate({
-      path: "saved",
-      model: Question,
-      match: searchQuery
-        ? // @ts-ignore
-          { title: { $regex: new RegExp(searchQuery, "i") } }
-        : {},
-      options: {
-        sort: sortOptions,
-        limit: pageSize + 1,
-        skip,
-      },
-      populate: [
-        { path: "author", Model: User, select: "_id clerkId name picture" },
-        { path: "tags", Model: Tag, select: "_id name" },
-      ],
+    const questions = await client.savedQuestions({
+      ownerId: userId,
     });
-    if (!user) {
-      throw new Error("User not found");
-    }
-    const isNext = user.saved.length > pageSize;
 
-    return { savedQuestions: user.saved.slice(0, pageSize), isNext };
+    return {
+      savedQuestions:
+        questions.interactionsByOwnerIdAndCreatedAt?.items
+          .map((i) => i?.question)
+          .filter((i) => !!i) || [],
+    };
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching saved questions");
@@ -320,5 +309,35 @@ export const getUserStats = async (params: GetUserStatsParams) => {
   } catch (error) {
     console.log(error);
     throw new Error("Error fetching user stats");
+  }
+};
+
+export async function createUser(params: CreateUserParams) {
+  try {
+    const client = await getGraphQLClient();
+    const user = await client.newDevFlowUser({
+      clerkId: params.clerkId,
+      email: params.email,
+      name: params.name,
+      username: params.username,
+      picture: params.picture,
+      rep: 0,
+    });
+    return user.createUser?.id;
+  } catch (error) {
+    console.log(error);
+    return null;
+    // throw new Error("Error creating user");
+  }
+}
+
+export const getUserById = async (params: GetUserByIdParams) => {
+  try {
+    const client = await getGraphQLClient();
+    const user = await client.getUserProfile({ userId: params.userId });
+    return user.getUser;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error fetching user");
   }
 };

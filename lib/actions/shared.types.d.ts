@@ -1,5 +1,3 @@
-import { Schema } from "mongoose";
-
 import { IUser } from "@/mongodb";
 
 export interface CreateAnswerParams {
@@ -19,8 +17,12 @@ export interface GetAnswersParams {
 export interface AnswerVoteParams {
   answerId: string;
   userId: string;
-  hasupVoted: boolean;
-  hasdownVoted: boolean;
+  upvoteAdded: boolean;
+  upvoteRemoved: boolean;
+  upvoteRemovedId?: string;
+  downvoteAdded: boolean;
+  downvoteRemoved: boolean;
+  downvoteRemovedId?: string;
   path: string;
 }
 
@@ -70,7 +72,7 @@ export interface CreateQuestionParams {
   title: string;
   content: string;
   tags: string[];
-  author: Schema.Types.ObjectId | IUser;
+  userId: string;
   path: string;
 }
 
@@ -81,8 +83,12 @@ export interface GetQuestionByIdParams {
 export interface QuestionVoteParams {
   questionId: string;
   userId: string;
-  hasupVoted: boolean;
-  hasdownVoted: boolean;
+  upvoteAdded: boolean;
+  upvoteRemoved: boolean;
+  upvoteRemovedId?: string;
+  downvoteAdded: boolean;
+  downvoteRemoved: boolean;
+  downvoteRemovedId?: string;
   path: string;
 }
 
@@ -145,11 +151,12 @@ export interface UpdateUserParams {
 export interface ToggleSaveQuestionParams {
   userId: string;
   questionId: string;
+  saveId?: string;
   path: string;
 }
 
 export interface GetSavedQuestionsParams {
-  clerkId: string;
+  userId: string;
   page?: number;
   pageSize?: number;
   filter?: string;

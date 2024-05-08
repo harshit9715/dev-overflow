@@ -1,14 +1,13 @@
 "use server";
 
-import Answer from "../database/answer.model";
-import Interaction from "../database/interaction.model";
-import Question from "../database/question.model";
-import { connectDatabase } from "../mongoose";
+import { POINT_SYSTEM_OTHER, POINT_SYSTEM_SELF } from "@/constants";
+import { InteractionType } from "../gql/types";
+import { getGraphQLClient } from "../graphql-client";
 import { ViewItemParams } from "./shared.types";
 
 export async function viewItem(params: ViewItemParams) {
   try {
-    connectDatabase();
+    const client = await getGraphQLClient();
     const { type, itemId, userId } = params;
     if (userId) {
       const query: Record<string, string> = {
@@ -20,22 +19,43 @@ export async function viewItem(params: ViewItemParams) {
       } else if (type === "answer") {
         query.answer = itemId;
       }
-      const exisitingInteraction = await Interaction.findOne(query);
-      if (exisitingInteraction) return;
+      const exisitingInteraction = await client.checkQuestionViewed({
+        questionId: itemId,
+        ownerId: userId,
+      });
+      if (
+        exisitingInteraction.interactionsByQuestionIdAndOwnerId?.items.length
+      ) {
+        return;
+      }
 
       // update view count for question
       if (type === "question") {
-        await Question.findByIdAndUpdate(itemId, { $inc: { views: 1 } });
+        await Promise.all([
+          client.createQuestionAction({
+            ownerId: "userId", //? sending static value for ownerId since its required, the actual value gets overridden in the vtl
+            targetUserId: userId,
+            questionId: itemId,
+            actionType: InteractionType.ViewQuestion,
+            pointsSelf: POINT_SYSTEM_SELF[InteractionType.ViewQuestion],
+            pointsTarget: POINT_SYSTEM_OTHER[InteractionType.ViewQuestion],
+          }),
+          client.viewQuestion({ questionId: itemId }),
+        ]);
       } else if (type === "answer") {
-        // update view count for answer
-        await Answer.findByIdAndUpdate(itemId, { $inc: { views: 1 } });
+        // TODO: update view count for answer
+        // await client.createAnswerAction({
+        //   userId,
+        //   answerId: itemId,
+        //   actionType: InteractionType.ViewAnswer,
+        // })
       }
-      await Interaction.create({
-        user: userId,
-        action: "view",
-        question: type === "question" ? [itemId] : undefined,
-        answer: type === "answer" ? [itemId] : undefined,
-      });
+      // await Interaction.create({
+      //   user: userId,
+      //   action: "view",
+      //   question: type === "question" ? [itemId] : undefined,
+      //   answer: type === "answer" ? [itemId] : undefined,
+      // });
     }
   } catch (error) {
     console.log(error);

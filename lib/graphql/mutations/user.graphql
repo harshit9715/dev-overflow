@@ -1,0 +1,22 @@
+mutation newDevFlowUser(
+  $username: String!
+  $clerkId: ID!
+  $email: AWSEmail!
+  $name: String
+  $picture: String
+  $rep: Int!
+) {
+  createUser(
+    input: {
+      username: $username
+      clerkId: $clerkId
+      email: $email
+      name: $name
+      role: USER
+      picture: $picture
+      reputation: $rep
+    }
+  ) {
+    id
+  }
+}

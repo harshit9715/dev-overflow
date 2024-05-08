@@ -44,9 +44,9 @@ const Answer = ({ question, questionId, authorId }: AnswerProps) => {
     try {
       const createAnswerPromise = createAnswer({
         content: values.answer,
-        author: JSON.parse(authorId),
+        author: authorId,
         path: pathname,
-        question: JSON.parse(questionId),
+        question: questionId,
       });
       toast.promise(createAnswerPromise, {
         loading: "Submitting...",

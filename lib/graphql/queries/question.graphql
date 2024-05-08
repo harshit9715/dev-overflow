@@ -1,0 +1,68 @@
+#import "../fragments/question.graphql"
+
+query HomeQuestions(
+  $filter: ModelQuestionFilterInput
+  $nextToken: String
+  $limit: Int
+) {
+  listQuestions(limit: $limit, nextToken: $nextToken, filter: $filter) {
+    nextToken
+    items {
+      ...HomeQuestion
+    }
+  }
+}
+
+query getTopQuestions($userId: ID, $limit: Int) {
+  searchQuestions(
+    limit: $limit
+    filter: { authorId: { ne: $userId } }
+    sort: { field: upvoteCount, direction: desc }
+  ) {
+    items {
+      id
+      title
+      slug
+    }
+  }
+}
+
+query getQuestionFromSlug($slug: String!) {
+  questionsBySlug(slug: $slug) {
+    items {
+      id
+    }
+  }
+}
+
+query getQuestionDetails($questionId: ID!, $ownerId: ID!) {
+  getQuestion(id: $questionId) {
+    title
+    content
+    upvoteCount
+    downvoteCount
+    viewCount
+    tags {
+      items {
+        tag {
+          label
+        }
+      }
+    }
+    author {
+      id
+      name
+      picture
+    }
+    createdAt
+  }
+  interactionsByQuestionIdAndOwnerId(
+    questionId: $questionId
+    ownerId: { eq: $ownerId }
+  ) {
+    items {
+      id
+      type
+    }
+  }
+}

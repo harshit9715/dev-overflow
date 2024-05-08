@@ -27,7 +27,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "graphql.config.js"
+    "graphql.config.ts"
   ],
   "exclude": ["node_modules"]
 }

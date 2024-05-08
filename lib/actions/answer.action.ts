@@ -1,11 +1,14 @@
 "use server";
 
+import { POINT_SYSTEM_OTHER, POINT_SYSTEM_SELF } from "@/constants";
 import { revalidatePath } from "next/cache";
 import Answer from "../database/answer.model";
 import Interaction from "../database/interaction.model";
 import Question from "../database/question.model";
-import User from "../database/user.model";
+import { InteractionType } from "../gql/types";
+import { getGraphQLClient } from "../graphql-client";
 import { connectDatabase } from "../mongoose";
+import { sleep } from "../utils";
 import {
   AnswerVoteParams,
   CreateAnswerParams,
@@ -15,31 +18,35 @@ import {
 
 export const createAnswer = async (params: CreateAnswerParams) => {
   try {
-    connectDatabase();
+    const client = await getGraphQLClient();
     const { author, content, path, question } = params;
-    const answer = await Answer.create({
-      author,
-      question,
+    const answer = await client.postNewAnswer({
+      authorId: author,
       content,
+      questionId: question,
+    });
+    console.log(answer.createAnswer?.id);
+
+    await client.updateAnswerCount({
+      questionId: question,
+      answerCount: 1,
     });
 
-    const questionObject = await Question.findByIdAndUpdate(question, {
-      $push: { answers: answer._id },
-    });
-
-    // Todo: add interaction to the user
-    await Interaction.create({
-      user: author,
-      action: "answer",
-      question,
-      answer: answer._id,
-      tags: questionObject.tags,
-    });
-
-    await User.findByIdAndUpdate(author, {
-      $inc: { reputation: 10 },
-    });
-
+    await Promise.all([
+      client.createAnswerAction({
+        actionType: InteractionType.ReplyQuestion,
+        answerId: answer.createAnswer?.id!,
+        questionId: question,
+        ownerId: "ownerId", //? sending static value for ownerId since its required, the actual value gets overridden in the vtl
+        targetUserId: author,
+        pointsSelf: POINT_SYSTEM_SELF[InteractionType.ReplyQuestion],
+        pointsTarget: POINT_SYSTEM_OTHER[InteractionType.ReplyQuestion],
+      }),
+      client.updateAnswerCount({
+        questionId: question,
+        answerCount: 1,
+      }),
+    ]);
     revalidatePath(path);
   } catch (error) {
     console.error(error);
@@ -54,8 +61,6 @@ export const getAnswers = async ({
   pageSize = 10,
 }: GetAnswersParams) => {
   try {
-    connectDatabase();
-
     let sortOptions = {};
     switch (sortBy) {
       case "highestUpvotes":
@@ -76,15 +81,18 @@ export const getAnswers = async ({
 
     const skip = (page - 1) * pageSize;
 
-    const answers = await Answer.find({ question: questionId })
-      .populate("author")
-      .skip(skip)
-      .limit(pageSize)
-      .sort(sortOptions);
-
-    const totalAnswers = await Answer.countDocuments({ question: questionId });
-    const isNext = totalAnswers > skip + answers.length;
-    return { answers, isNext };
+    const client = await getGraphQLClient();
+    const answers = await client.getAnswersForQuestion({
+      questionId,
+      limit: pageSize,
+      skip,
+    });
+    const isNext = (answers.searchAnswers?.total || 0) > page * pageSize;
+    return {
+      answers: answers.searchAnswers?.items || [],
+      isNext,
+      totalAnswers: answers.searchAnswers?.total || 0,
+    };
   } catch (error) {
     console.error(error);
     throw new Error("Failed to fetch answers");
@@ -93,78 +101,58 @@ export const getAnswers = async ({
 
 export const voteAnswer = async ({
   answerId,
-  hasdownVoted,
-  hasupVoted,
   userId,
+  upvoteRemovedId,
+  downvoteRemovedId,
+  downvoteAdded,
+  downvoteRemoved,
+  upvoteAdded,
+  upvoteRemoved,
   path,
 }: AnswerVoteParams) => {
   try {
-    connectDatabase();
-    const answer = await Answer.findById(answerId);
-    if (!answer) throw new Error("Answer not found");
-    if (hasupVoted) {
-      if (answer.upvotes.includes(userId)) {
-        await answer.updateOne({ $pull: { upvotes: userId } });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: -2 },
-        });
-        if (answer.author.toString() !== userId) {
-          await User.findByIdAndUpdate(answer.author, {
-            $inc: { reputation: -5 },
-          });
-        }
-      } else {
-        let times = 1;
-        if (answer.downvotes.includes(userId)) {
-          times = 2;
-          await answer.updateOne({
-            $pull: { downvotes: userId },
-          });
-        }
-        await answer.updateOne({
-          $push: { upvotes: userId },
-        });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: 2 * times },
-        });
-        if (answer.author.toString() !== userId) {
-          await User.findByIdAndUpdate(answer.author, {
-            $inc: { reputation: 5 * times },
-          });
-        }
-      }
-    } else if (hasdownVoted) {
-      if (answer.downvotes.includes(userId)) {
-        await answer.updateOne({ $pull: { downvotes: userId } });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: 2 },
-        });
-        if (answer.author.toString() !== userId) {
-          await User.findByIdAndUpdate(answer.author, {
-            $inc: { reputation: 5 },
-          });
-        }
-      } else {
-        let times = 1;
-        if (answer.upvotes.includes(userId)) {
-          times = 2;
-          await answer.updateOne({
-            $pull: { upvotes: userId },
-          });
-        }
-        await answer.updateOne({
-          $push: { downvotes: userId },
-        });
-        await User.findByIdAndUpdate(userId, {
-          $inc: { reputation: -2 * times },
-        });
-        if (answer.author.toString() !== userId) {
-          await User.findByIdAndUpdate(answer.author, {
-            $inc: { reputation: -5 * times },
-          });
-        }
-      }
-    }
+    const client = await getGraphQLClient();
+    await Promise.all([
+      // update the question with the vote
+      client.voteAnswer({
+        answerId,
+        upvote: upvoteAdded ? 1 : upvoteRemoved ? -1 : 0,
+        downvote: downvoteAdded ? 1 : downvoteRemoved ? -1 : 0,
+      }),
+      // update the interaction with the upvote if it was added
+      upvoteAdded &&
+        client.createAnswerAction({
+          actionType: InteractionType.UpvoteAnswer,
+          answerId,
+          ownerId: "userId", //? sending static value for ownerId since its required, the actual value gets overridden in the vtl
+          targetUserId: userId,
+          pointsSelf: POINT_SYSTEM_SELF[InteractionType.UpvoteAnswer],
+          pointsTarget: POINT_SYSTEM_OTHER[InteractionType.UpvoteAnswer],
+        }),
+      // update the interaction with the downvote if it was added
+      downvoteAdded &&
+        client.createAnswerAction({
+          actionType: InteractionType.DownvoteAnswer,
+          answerId,
+          ownerId: "userId", //? sending static value for ownerId since its required, the actual value gets overridden in the vtl
+          targetUserId: userId,
+          pointsSelf: POINT_SYSTEM_SELF[InteractionType.DownvoteAnswer],
+          pointsTarget: POINT_SYSTEM_OTHER[InteractionType.DownvoteAnswer],
+        }),
+      // remove the interaction with the upvote if it was removed
+      upvoteRemoved &&
+        upvoteRemovedId &&
+        client.deleteInteraction({
+          actionId: upvoteRemovedId,
+        }),
+      // remove the interaction with the downvote if it was removed
+      downvoteRemoved &&
+        downvoteRemovedId &&
+        client.deleteInteraction({
+          actionId: downvoteRemovedId,
+        }),
+    ]);
+    await sleep(2);
     revalidatePath(path);
   } catch (error) {
     console.error(error);

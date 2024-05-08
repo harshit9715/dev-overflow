@@ -37,17 +37,17 @@ const Pagination = ({
         onClick={() => handleNavination("prev")}
         className="light-border-2 border btn flex min-h-[36px] items-center justify-center gap-2"
       >
-        <p className="body-medium text-dark200_light_800">Prev</p>
+        <p className="body-regular text-dark500_light700">Prev</p>
       </Button>
       <div className="bg-primary-500 flex justify-center items-center rounded-md px-3.5 py-2">
-        <p className="body-semibold text-light-900">{pageNumber}</p>
+        <p className="body-semibold text-dark500_light700">{pageNumber}</p>
       </div>
       <Button
         disabled={!isNext}
         onClick={() => handleNavination("next")}
         className="light-border-2 border btn flex min-h-[36px] items-center justify-center gap-2"
       >
-        <p className="body-medium text-dark200_light_800">Next</p>
+        <p className="body-regular text-dark500_light700">Next</p>
       </Button>
     </div>
   );
