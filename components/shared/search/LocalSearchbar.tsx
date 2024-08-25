@@ -43,6 +43,7 @@ const LocalSearch = ({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, route, pathname, searchParam, query]);
   return (
     <div

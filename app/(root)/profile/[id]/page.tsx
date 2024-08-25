@@ -16,7 +16,7 @@ import Link from "next/link";
 const Profile = async ({ params: { id }, searchParams }: URLProps) => {
   const { userId: clerkId } = auth();
   const mongoUser = await getUserById({ userId: id });
-  const { tags } = await getTagByUserId({ userId: mongoUser._id });
+  const { tags } = await getTagByUserId({ userId: mongoUser._id as string });
   return (
     <>
       <div className="flex flex-col-reverse items-start justify-between sm:flex-row">
@@ -80,7 +80,7 @@ const Profile = async ({ params: { id }, searchParams }: URLProps) => {
         <h2 className="h2-semibold text-dark100_light900 mt-10">
           Stats: {mongoUser.reputation}
         </h2>
-        <Stats userId={mongoUser._id!} />
+        <Stats userId={mongoUser._id as string} />
       </div>
       <div className="mt-10 flex gap-10">
         <Tabs defaultValue="top-posts" className="flex-1">
@@ -107,14 +107,14 @@ const Profile = async ({ params: { id }, searchParams }: URLProps) => {
             <div className="flex">
               <QuestionTab
                 searchParams={searchParams}
-                userId={mongoUser._id}
+                userId={mongoUser._id as string}
                 clerkId={clerkId!}
               />
             </div>
           </TabsContent>
           <TabsContent value="answers">
             <AnswerTab
-              userId={mongoUser._id}
+              userId={mongoUser._id as string}
               clerkId={clerkId!}
               searchParams={searchParams}
             />

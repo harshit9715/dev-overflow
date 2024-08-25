@@ -85,7 +85,11 @@ const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
       <ParseHTML data={question.content} />
       <div className="mt-8 flex flex-wrap gap-2">
         {question.tags.map((tag: ITag) => (
-          <RenderTag key={tag._id} _id={tag._id} name={tag.name} />
+          <RenderTag
+            key={tag._id as string}
+            _id={tag._id as string}
+            name={tag.name}
+          />
         ))}
       </div>
       <AllAnswers

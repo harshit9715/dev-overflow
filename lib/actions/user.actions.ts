@@ -199,8 +199,8 @@ export const getAllSavedQuestions = async (params: GetSavedQuestionsParams) => {
         skip,
       },
       populate: [
-        { path: "author", Model: User, select: "_id clerkId name picture" },
-        { path: "tags", Model: Tag, select: "_id name" },
+        { path: "author", model: User, select: "_id clerkId name picture" },
+        { path: "tags", model: Tag, select: "_id name" },
       ],
     });
     if (!user) {

@@ -4,5 +4,9 @@
     "standard",
     "plugin:tailwindcss/recommended",
     "prettier"
-  ]
+  ],
+  "globals": {
+    "React": "writable",
+    "JSX": "writable"
+  }
 }
