@@ -71,7 +71,7 @@ const Votes = ({
         ? `Removed your upvote from the ${type}`
         : hasDownvoted && voteType === "downvote"
           ? `Removed your downvote from the ${type}`
-          : `Added your ${voteType} to the ${type}`
+          : `Added your ${voteType} to the ${type}`,
     );
   };
   const handleSave = async () => {

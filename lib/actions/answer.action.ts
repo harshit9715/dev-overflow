@@ -180,7 +180,7 @@ export const deleteAnswer = async (params: DeleteAnswerParams) => {
     if (!answer) throw new Error("Answer not found");
     await Question.updateMany(
       { answers: answerId },
-      { $pull: { answers: answerId } }
+      { $pull: { answers: answerId } },
     );
     await Interaction.deleteMany({ answer: answerId });
     revalidatePath(path);

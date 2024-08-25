@@ -59,7 +59,7 @@ export async function globalSearch({ query, type }: SearchParams) {
                 : type === "answer"
                   ? result.question
                   : result._id,
-          }))
+          })),
         );
       }
     } else {

@@ -81,7 +81,7 @@ const Answer = ({ question, questionId, authorId }: AnswerProps) => {
           body: JSON.stringify({
             question,
           }),
-        }
+        },
       ).then((res) => res.json());
       let formattedAnswer = "";
       toast.promise(aiAnswer, {

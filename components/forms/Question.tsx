@@ -61,7 +61,7 @@ const Question = ({
 
   const handleInputKeyDown = (
     e: KeyboardEvent<HTMLInputElement>,
-    field: any
+    field: any,
   ) => {
     if (e.key === "Enter" && field.name === "tags") {
       e.preventDefault();

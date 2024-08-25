@@ -60,7 +60,7 @@ export const formUrlQuery = ({ params, key, value }: UrlQueryParams) => {
       url: window.location.pathname,
       query: currentUrl,
     },
-    { skipEmptyString: true, skipNull: true }
+    { skipEmptyString: true, skipNull: true },
   );
 };
 
