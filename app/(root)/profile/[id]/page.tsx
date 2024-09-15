@@ -9,12 +9,12 @@ import { getTagByUserId } from "@/lib/actions/tag.actions";
 import { getUserById } from "@/lib/actions/user.actions";
 import { formattedDate } from "@/lib/utils";
 import { URLProps } from "@/types";
-import { SignedIn, auth } from "@clerk/nextjs";
+import { SignedIn, useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 
 const Profile = async ({ params: { id }, searchParams }: URLProps) => {
-  const { userId: clerkId } = auth();
+  const { userId: clerkId } = useAuth();
   const mongoUser = await getUserById({ userId: id });
   const { tags } = await getTagByUserId({ userId: mongoUser._id as string });
   return (

@@ -2,10 +2,10 @@ import Question from "@/components/forms/Question";
 import { getQuestionById } from "@/lib/actions/question.action";
 import { getUserById } from "@/lib/actions/user.actions";
 import { ParamsProps } from "@/types";
-import { auth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 
 const EditQuestion = async ({ params }: ParamsProps) => {
-  const { userId } = auth();
+  const { userId } = useAuth();
   if (!userId) return null;
   const mongoUser = await getUserById({ userId });
   const { question } = await getQuestionById(params.id);

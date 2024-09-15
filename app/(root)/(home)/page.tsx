@@ -11,7 +11,7 @@ import {
   getRecommendedQuestions,
 } from "@/lib/actions/question.action";
 import { URLProps } from "@/types";
-import { auth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { Metadata } from "next";
 import Link from "next/link";
 
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 const Home = async ({ searchParams }: URLProps) => {
   let questions = [];
   let isNext = false;
+  const { userId } = useAuth();
   if (searchParams?.filter === "recommended") {
-    const { userId } = auth();
     if (!userId) {
       return {
         redirect: {

@@ -9,14 +9,14 @@ import { getUserById } from "@/lib/actions/user.actions";
 import { ITag } from "@/lib/database/tag.model";
 import { bigNumberToString, getTimestamp } from "@/lib/utils";
 import { URLProps } from "@/types";
-import { auth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 const QuestionDetails = async ({ params: { id }, searchParams }: URLProps) => {
   const { question } = await getQuestionById(id);
-  const { userId } = auth();
+  const { userId } = useAuth();
   if (!userId) {
     redirect("/sign-in");
   }

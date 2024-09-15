@@ -43,7 +43,7 @@ export async function createQuestion(params: CreateQuestionParams) {
           tagDocuments.push(existingTag._id);
         } else {
           const response = await fetchOpenAICompletion(
-            `a brief description of the ${tag} in less than 100 characters in plaintext.`,
+            `a brief description of the ${tag} in less than 100 characters in plaintext.`
           );
           const reply = response.choices[0].message.content;
 
@@ -54,7 +54,7 @@ export async function createQuestion(params: CreateQuestionParams) {
           });
           tagDocuments.push(newTag._id);
         }
-      }),
+      })
     );
 
     await Question.findByIdAndUpdate(question._id, {
@@ -87,6 +87,7 @@ export async function getQuestions(params: GetQuestionsParams) {
     if (searchQuery) {
       query.$or = [
         { title: { $regex: new RegExp(searchQuery, "i") } },
+
         { content: { $regex: new RegExp(searchQuery, "i") } },
       ];
     }
@@ -270,7 +271,7 @@ export const deleteQuestion = async (params: DeleteQuestionParams) => {
     await Interaction.deleteMany({ question: questionId });
     await Tag.updateMany(
       { questions: questionId },
-      { $pull: { questions: questionId } },
+      { $pull: { questions: questionId } }
     );
     revalidatePath(path);
   } catch (error) {
@@ -351,6 +352,7 @@ export async function getRecommendedQuestions(params: RecommendedParams) {
     const query: FilterQuery<typeof Question> = {
       $and: [
         { tags: { $in: distinctUserTagIds } }, // Questions with user's tags
+
         { author: { $ne: user._id } }, // Exclude user's own questions
       ],
     };
@@ -358,6 +360,7 @@ export async function getRecommendedQuestions(params: RecommendedParams) {
     if (searchQuery) {
       query.$or = [
         { title: { $regex: searchQuery, $options: "i" } },
+
         { content: { $regex: searchQuery, $options: "i" } },
       ];
     }

@@ -1,10 +1,10 @@
 import ProfileForm from "@/components/forms/Profile";
 import { getUserById } from "@/lib/actions/user.actions";
 import { ParamsProps } from "@/types";
-import { auth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 
 const EditProfile = async ({ params }: ParamsProps) => {
-  const { userId } = auth();
+  const { userId } = useAuth();
   if (!userId) return null;
   const mongoUser = await getUserById({ userId });
   return (

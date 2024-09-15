@@ -75,7 +75,7 @@ export async function deleteUser(params: DeleteUserParams) {
 
     // get user question ids
     const userQuestionIds = await Question.find({ author: user._id }).distinct(
-      "_id",
+      "_id"
     );
 
     await Question.deleteMany({ author: user._id });
@@ -101,6 +101,7 @@ export async function getAllUsers(params: GetAllUsersParams) {
     if (searchQuery) {
       query.$or = [
         { name: { $regex: new RegExp(searchQuery, "i") } },
+
         { username: { $regex: new RegExp(searchQuery, "i") } },
       ];
     }
